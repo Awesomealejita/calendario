@@ -1,4 +1,5 @@
 "use client";
+import { TIMEZONE } from "@/lib/time";
 import { useState, useTransition } from "react";
 import type { ActivityType } from "@/lib/types";
 import { deleteActivityType, disconnect, saveActivityType, saveHolded, saveIcsUrl, syncNow } from "@/app/(app)/settings/actions";
@@ -35,7 +36,7 @@ const Msg = ({ m }: { m: { text: string; ok: boolean } | null }) =>
 const Status = ({ s }: { s?: IntegrationState }) =>
   s ? (
     <p className="text-xs text-muted">
-      {s.last_error ? <span className="text-red">Error: {s.last_error}</span> : s.last_synced_at ? `Última sincronización: ${new Date(s.last_synced_at).toLocaleString("es-ES")}` : "Pendiente de sincronizar"}
+      {s.last_error ? <span className="text-red">Error: {s.last_error}</span> : s.last_synced_at ? `Última sincronización: ${new Date(s.last_synced_at).toLocaleString("es-ES", { timeZone: TIMEZONE })}` : "Pendiente de sincronizar"}
     </p>
   ) : null;
 

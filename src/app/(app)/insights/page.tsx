@@ -70,10 +70,10 @@ export default async function InsightsPage() {
           <h2 className="mb-1 font-bold">🧮 Cuadre de horas</h2>
           <p className="mb-3 text-xs text-muted">Fichajes de Holded vs. cronómetro vs. reuniones de Outlook, por día.</p>
           <div className="-mx-4 overflow-x-auto px-4">
-            <table className="w-full min-w-[480px] text-sm">
+            <table className="w-full min-w-[520px] whitespace-nowrap text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase text-muted">
-                  <th className="py-1 font-semibold">Día</th>
+                  <th className="py-1 pr-3 font-semibold">Día</th>
                   <th className="font-semibold">Holded</th>
                   <th className="font-semibold">Crono</th>
                   <th className="font-semibold">Reuniones</th>
@@ -84,7 +84,7 @@ export default async function InsightsPage() {
               <tbody className="divide-y divide-border">
                 {report.workBalance.map((d) => (
                   <tr key={d.day}>
-                    <td className="py-2 capitalize">
+                    <td className="py-2 pr-3 capitalize">
                       {new Date(`${d.day}T12:00:00Z`).toLocaleDateString("es-ES", { weekday: "short", day: "numeric" })}
                     </td>
                     <td className="tabular-nums">{d.clocked ? formatDuration(d.clocked) : "—"}</td>
@@ -94,7 +94,7 @@ export default async function InsightsPage() {
                       {d.expected ? `${d.delta > 0 ? "+" : ""}${formatDuration(d.delta)}` : "—"}
                     </td>
                     <td>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1 whitespace-normal">
                         {d.flags.map((f) => (
                           <span key={f} className="rounded-md bg-red px-1.5 py-0.5 text-[10px] font-bold text-white">{FLAG_LABEL[f]}</span>
                         ))}

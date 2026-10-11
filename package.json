@@ -9,7 +9,10 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "local": "bash scripts/local.sh",
+    "mock": "node scripts/mock-services.mjs",
+    "e2e": "node e2e/full-flow.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",
@@ -42,6 +45,8 @@
     "@types/web-push": "^3.6.4",
     "eslint": "^9.37.0",
     "eslint-config-next": "^16.4.0",
+    "playwright-core": "^1.56.1",
+    "supabase": "^2.120.0",
     "tailwindcss": "^4.1.16",
     "typescript": "^5.9.3",
     "vitest": "^5.0.3"

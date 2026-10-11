@@ -1,4 +1,5 @@
 "use client";
+import { TIMEZONE } from "@/lib/time";
 import { useOptimistic, useState, useTransition } from "react";
 import type { Task } from "@/lib/types";
 import { addTask, toggleTask } from "@/app/(app)/calendar/actions";
@@ -54,7 +55,7 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
               {t.source === "outlook" && <span className="rounded-md bg-plum px-1.5 py-0.5 text-[10px] font-bold text-white">To Do</span>}
               {t.due_at && (
                 <span className={`text-xs ${overdue ? "font-bold text-red" : "text-muted"}`}>
-                  {new Date(t.due_at).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}
+                  {new Date(t.due_at).toLocaleDateString("es-ES", { day: "numeric", month: "short", timeZone: TIMEZONE })}
                 </span>
               )}
             </li>

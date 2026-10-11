@@ -30,6 +30,7 @@ export default async function TimerPage() {
       open={(open.data ?? []) as TimeSession[]}
       today={(today.data ?? []) as TimeSession[]}
       next={(next.data ?? []) as CalendarEvent[]}
+      serverNow={now.getTime()}
       holdedReady={Boolean((holded.data?.config as { employeeId?: string } | undefined)?.employeeId)}
     />
   );

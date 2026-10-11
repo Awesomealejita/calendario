@@ -24,8 +24,18 @@ export async function GET(req: Request, { params }: { params: Promise<{ size: st
           }}
         >
           <div style={{ height: inner * 0.24, background: "rgba(44,33,83,0.85)", display: "flex" }} />
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#2C2153", fontSize: inner * 0.42, fontWeight: 800 }}>
-            ✓
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {/* Check dibujado con bordes: sin glifos, así no hace falta descargar fuentes. */}
+            <div
+              style={{
+                width: inner * 0.2,
+                height: inner * 0.4,
+                borderRight: `${inner * 0.08}px solid #2C2153`,
+                borderBottom: `${inner * 0.08}px solid #2C2153`,
+                transform: "rotate(45deg) translate(-8%, -12%)",
+                display: "flex",
+              }}
+            />
           </div>
         </div>
       </div>

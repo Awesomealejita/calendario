@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useState, useTransition } from "react";
 import type { ActivityType, CalendarEvent, TimeSession } from "@/lib/types";
-import { formatClock, formatDuration, isPaused, pausedMs, sessionMinutes } from "@/lib/time";
+import { TIMEZONE, formatClock, formatDuration, isPaused, pausedMs, sessionMinutes } from "@/lib/time";
 import { pauseAction, startAction, stopAction } from "@/app/(app)/timer/actions";
 import { useLocalFlag } from "@/components/hooks";
 
-function useNow(active: boolean) {
-  const [now, setNow] = useState(() => Date.now());
+/** Parte de la hora del servidor para que el HTML hidratado coincida, y luego avanza cada segundo. */
+function useNow(initial: number, active: boolean) {
+  const [now, setNow] = useState(initial);
   useEffect(() => {
     if (!active) return;
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -23,14 +24,16 @@ export function TimerBoard({
   today,
   next,
   holdedReady,
+  serverNow,
 }: {
   types: ActivityType[];
   open: TimeSession[];
   today: TimeSession[];
   next: CalendarEvent[];
   holdedReady: boolean;
+  serverNow: number;
 }) {
-  const now = useNow(open.length > 0);
+  const now = useNow(serverNow, open.length > 0);
   const [holdedPref, setHolded] = useLocalFlag(HOLDED_PREF, true);
   const holded = holdedReady && holdedPref;
   const [msg, setMsg] = useState<{ text: string; tone: "ok" | "warn" | "err" } | null>(null);
@@ -56,7 +59,7 @@ export function TimerBoard({
           const paused = s ? isPaused(s) : false;
           const elapsed = s ? (now - new Date(s.started_at).getTime() - pausedMs(s.pauses, now)) / 1000 : 0;
           const nextEv = next.find((e) => e.activity_type_id === t.id);
-          const doneToday = today.filter((x) => x.activity_type_id === t.id && x.ended_at).reduce((a, x) => a + sessionMinutes(x), 0);
+          const doneToday = today.filter((x) => x.activity_type_id === t.id && x.ended_at).reduce((a, x) => a + sessionMinutes(x, new Date(now)), 0);
           return (
             <section key={t.id} className="card relative overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: t.color }} />
@@ -72,13 +75,13 @@ export function TimerBoard({
               </p>
               {s ? (
                 <p className="mb-3 text-center text-xs text-muted">
-                  Desde {new Date(s.started_at).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
+                  Desde {new Date(s.started_at).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE })}
                   {s.event_id ? " · vinculado a tu plan" : " · sin evento planificado"}
                   {paused && " · en pausa"}
                 </p>
               ) : nextEv ? (
                 <p className="mb-3 text-center text-xs text-muted">
-                  Próximo: {nextEv.title} · {new Date(nextEv.starts_at).toLocaleString("es-ES", { weekday: "short", hour: "2-digit", minute: "2-digit" })}
+                  Próximo: {nextEv.title} · {new Date(nextEv.starts_at).toLocaleString("es-ES", { weekday: "short", hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE })}
                 </p>
               ) : (
                 <p className="mb-3 text-center text-xs text-muted">Sin nada planificado pronto</p>
@@ -129,8 +132,8 @@ export function TimerBoard({
                     {t?.icon} {t?.name ?? "—"} {s.source === "holded" && <span className="ml-1 rounded bg-plum px-1.5 text-[10px] font-bold text-white">Holded</span>}
                   </span>
                   <span className="tabular-nums text-muted">
-                    {new Date(s.started_at).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}–
-                    {s.ended_at ? new Date(s.ended_at).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) : "…"} ·{" "}
+                    {new Date(s.started_at).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE })}–
+                    {s.ended_at ? new Date(s.ended_at).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE }) : "…"} ·{" "}
                     {formatDuration(sessionMinutes(s, new Date(now)))}
                   </span>
                 </li>

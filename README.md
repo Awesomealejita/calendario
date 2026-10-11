@@ -35,7 +35,24 @@ supabase/migrations esquema + RLS + módulos por defecto
 
 **Seguridad**: cada tabla tiene RLS por usuario. Los tokens de Outlook y la API key de Holded se cifran con AES-256-GCM y viven en una tabla sin políticas RLS (solo accesible con service role desde el servidor).
 
-## Puesta en marcha
+## Probarlo en local con un comando (Mac)
+
+Necesitas [Docker Desktop](https://www.docker.com/products/docker-desktop/) abierto y Node 20+.
+
+```bash
+npm install
+npm run local          # Supabase en Docker + simulador + app → http://localhost:3000
+```
+
+- Entra con cualquier email; el enlace mágico llega al buzón local **http://127.0.0.1:54324**.
+- En **modo demo** Microsoft (Outlook/To Do), Holded y Claude están **simulados** (`scripts/mock-services.mjs`): todo lo que sale de ellos lleva datos de ejemplo y las respuestas de la IA van marcadas como `[Simulado]`. En Ajustes puedes probar el ICS con `http://localhost:4010/ics/calendar.ics`.
+- Con tus claves reales en `.env.local`: `REAL=1 npm run local`.
+- Prueba de punta a punta (20 pasos, con navegador): `npm run e2e` con la app levantada.
+
+### ¿Y en el iPhone?
+Para instalarla como app en el iPhone (icono, pantalla completa, notificaciones y uso sin conexión) iOS exige **HTTPS** y que el servidor esté siempre accesible, así que lo práctico es desplegarla en la nube (pasos de abajo; los planes gratuitos de Supabase y Vercel bastan para uso personal). En el Mac puedes usar la misma URL en el navegador o instalarla como app desde Chrome/Safari.
+
+## Puesta en marcha en la nube
 
 ### 1. Supabase
 1. Crea un proyecto en [supabase.com](https://supabase.com).

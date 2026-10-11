@@ -17,6 +17,7 @@
   --accent: #e8543f;
   --accent-text: #ffffff;
   --focus: #7c3f82;
+  --today: rgba(255, 207, 156, 0.28);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,6 +31,7 @@
     --accent: #ff8c6b;
     --accent-text: #2c2153;
     --focus: #ffcf9c;
+    --today: rgba(124, 63, 130, 0.22);
   }
 }
 :root[data-theme="dark"] {
@@ -42,6 +44,7 @@
   --accent: #ff8c6b;
   --accent-text: #2c2153;
   --focus: #ffcf9c;
+  --today: rgba(124, 63, 130, 0.22);
 }
 
 @theme inline {
@@ -99,7 +102,7 @@ body {
   --fc-border-color: var(--border);
   --fc-page-bg-color: var(--surface);
   --fc-neutral-bg-color: var(--surface-2);
-  --fc-today-bg-color: color-mix(in srgb, var(--peach) 28%, transparent);
+  --fc-today-bg-color: var(--today);
   --fc-now-indicator-color: var(--red);
   --fc-button-bg-color: var(--surface);
   --fc-button-border-color: var(--border);
@@ -117,11 +120,29 @@ body {
 .fc .fc-toolbar-title {
   font-size: 1.05rem;
   font-weight: 700;
-  text-transform: capitalize;
+}
+.fc .fc-toolbar-title::first-letter {
+  text-transform: uppercase;
+}
+@media (max-width: 640px) {
+  .fc .fc-toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .fc .fc-toolbar-title {
+    font-size: 0.95rem;
+  }
+  .fc .fc-button {
+    padding: 0.3rem 0.55rem;
+    font-size: 0.8rem;
+  }
 }
 .fc .fc-event.ev-missed {
   opacity: 0.55;
   text-decoration: line-through;
+}
+.fc .fc-event.ev-done {
+  position: relative;
 }
 .fc .fc-event.ev-done::after {
   content: "✓";

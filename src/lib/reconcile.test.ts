@@ -42,3 +42,21 @@ describe("reconcileWork", () => {
     expect(d.flags).toEqual([]);
   });
 });
+
+describe("fichajes olvidados", () => {
+  it("un fichaje abierto de un día pasado no suma horas y se marca", () => {
+    const [d] = reconcileWork({
+      days: ["2026-10-09"], types: [work], events: [], now: new Date("2026-10-11T20:00:00Z"),
+      sessions: [ses({ started_at: "2026-10-09T07:00:00Z", ended_at: null })],
+    });
+    expect(d.clocked).toBe(0);
+    expect(d.flags).toContain("open_clock");
+  });
+  it("un fichaje abierto de hoy cuenta hasta ahora", () => {
+    const [d] = reconcileWork({
+      days: ["2026-10-12"], types: [work], events: [], now: new Date("2026-10-12T09:00:00Z"),
+      sessions: [ses({ started_at: "2026-10-12T07:00:00Z", ended_at: null })],
+    });
+    expect(d.clocked).toBe(120);
+  });
+});

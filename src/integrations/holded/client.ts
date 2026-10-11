@@ -1,7 +1,7 @@
 import "server-only";
 import type { HoldedTime } from "@/integrations/holded/mapping";
 
-const BASE = "https://api.holded.com/api/team/v1";
+const BASE = `${process.env.HOLDED_BASE_URL || "https://api.holded.com"}/api/team/v1`;
 
 export interface HoldedSecret {
   apiKey: string;

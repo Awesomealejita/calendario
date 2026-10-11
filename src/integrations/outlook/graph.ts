@@ -2,7 +2,7 @@ import "server-only";
 import { readSecret, saveSecret } from "@/lib/secrets";
 import { refreshTokens, type MsTokens } from "@/integrations/outlook/oauth";
 
-const GRAPH = "https://graph.microsoft.com/v1.0";
+const GRAPH = process.env.MS_GRAPH_BASE_URL || "https://graph.microsoft.com/v1.0";
 
 export class GraphClient {
   private constructor(private userId: string, private tokens: MsTokens) {}

@@ -1,5 +1,5 @@
 import type { ActivityType, CalendarEvent, TimeSession } from "@/lib/types";
-import { dayKey, eventMinutes, overlapMinutes, sessionMinutes } from "@/lib/time";
+import { countedMinutes, dayKey, eventMinutes, overlapMinutes } from "@/lib/time";
 
 export interface DayBalance {
   day: string;
@@ -19,6 +19,10 @@ export interface DayBalance {
   delta: number;
   flags: Array<"no_clock" | "overtime" | "short" | "meetings_outside" | "open_clock">;
 }
+
+/** Fin efectivo: un fichaje abierto de un día pasado no cubre nada (se avisa como "fichaje abierto"). */
+const effectiveEnd = (s: TimeSession, now: Date) =>
+  s.ended_at ?? (countedMinutes(s, now) > 0 ? now.toISOString() : s.started_at);
 
 const isWeekday = (day: string) => {
   const d = new Date(`${day}T12:00:00Z`).getUTCDay();
@@ -50,14 +54,14 @@ export function reconcileWork(params: {
     const meetingsEv = dayEvents.filter((e) => e.source !== "local");
     const plannedEv = dayEvents.filter((e) => e.source === "local" && e.activity_type_id && workIds.has(e.activity_type_id));
 
-    const clocked = holded.reduce((a, s) => a + sessionMinutes(s, now), 0);
-    const tracked = timer.reduce((a, s) => a + sessionMinutes(s, now), 0);
+    const clocked = holded.reduce((a, s) => a + countedMinutes(s, now), 0);
+    const tracked = timer.reduce((a, s) => a + countedMinutes(s, now), 0);
     const meetings = meetingsEv.reduce((a, e) => a + eventMinutes(e), 0);
     const planned = plannedEv.reduce((a, e) => a + eventMinutes(e), 0);
     const meetingsOutsideClock = holded.length
       ? meetingsEv.reduce((a, e) => {
           const covered = holded.reduce(
-            (c, s) => c + overlapMinutes(e.starts_at, e.ends_at, s.started_at, s.ended_at ?? now.toISOString()),
+            (c, s) => c + overlapMinutes(e.starts_at, e.ends_at, s.started_at, effectiveEnd(s, now)),
             0,
           );
           return a + Math.max(0, eventMinutes(e) - covered);

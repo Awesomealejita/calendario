@@ -1,4 +1,5 @@
 "use client";
+import { TIMEZONE } from "@/lib/time";
 import { useState, useTransition } from "react";
 import type { Suggestion } from "@/lib/types";
 import type { SuggestionAction } from "@/ai/schema";
@@ -52,7 +53,7 @@ export function Suggestions({ items, aiOn }: { items: Suggestion[]; aiOn: boolea
             const action = s.action as SuggestionAction | null;
             const when =
               action?.start &&
-              new Date(action.start).toLocaleString("es-ES", { weekday: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
+              new Date(action.start).toLocaleString("es-ES", { weekday: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE });
             return (
               <li key={s.id} className="rounded-2xl border border-border bg-surface-2 p-3">
                 <div className="mb-1 flex items-center gap-2">

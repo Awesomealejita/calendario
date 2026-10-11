@@ -17,7 +17,8 @@ export interface IcsOccurrence {
  */
 export async function fetchIcs(url: string, from: Date, to: Date): Promise<IcsOccurrence[]> {
   const parsed = new URL(url.replace(/^webcal:/i, "https:"));
-  if (parsed.protocol !== "https:") throw new Error("La URL ICS debe ser https");
+  const local = ["localhost", "127.0.0.1"].includes(parsed.hostname) && process.env.NODE_ENV !== "production";
+  if (parsed.protocol !== "https:" && !local) throw new Error("La URL ICS debe ser https");
   const res = await fetch(parsed, { headers: { Accept: "text/calendar" } });
   if (!res.ok) throw new Error(`ICS ${res.status}`);
   return expandIcs(await res.text(), from, to);

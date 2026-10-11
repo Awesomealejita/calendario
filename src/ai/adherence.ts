@@ -2,7 +2,7 @@ import { addDays, startOfWeek } from "date-fns";
 import { TZDate } from "@date-fns/tz";
 import { MODULES, moduleFor } from "@/modules/core/registry";
 import type { ActivityType, CalendarEvent, Task, TimeSession } from "@/lib/types";
-import { TIMEZONE, dayKey, eventMinutes, sessionMinutes } from "@/lib/time";
+import { TIMEZONE, countedMinutes, dayKey, eventMinutes, sessionMinutes } from "@/lib/time";
 import { reconcileWork, type DayBalance } from "@/lib/reconcile";
 
 export type IssueKind =
@@ -141,20 +141,23 @@ export function analyzeAdherence(input: {
     }
   }
 
-  // 2) Objetivos semanales (p. ej. gym 4 sesiones / 240 min).
+  // 2) Objetivos semanales (p. ej. gym 4 sesiones / 240 min). El trabajo se mide con el cuadre
+  //    (Holded si hay fichajes ese día, si no el cronómetro) para no contar dos veces.
   const { start, end, days } = weekBounds(now);
   const daysLeft = Math.max(0, Math.ceil((end.getTime() - nowMs) / 86400000));
+  const workBalance = reconcileWork({ days, types, events, sessions, now });
+  const workMinutes = workBalance.reduce((a, d) => a + (d.clocked || d.tracked), 0);
   const weekly = types
     .filter((t) => t.weekly_goal_sessions || t.weekly_goal_minutes)
     .map((t) => {
       const ws = sessions.filter(
-        (s) => s.activity_type_id === t.id && ms(s.started_at) >= start.getTime() && ms(s.started_at) < end.getTime(),
+        (s) => s.activity_type_id === t.id && s.source === "timer" && ms(s.started_at) >= start.getTime() && ms(s.started_at) < end.getTime(),
       );
       return {
         activityTypeId: t.id,
         name: t.name,
         sessions: ws.length,
-        minutes: ws.reduce((a, s) => a + sessionMinutes(s, now), 0),
+        minutes: t.module === "work" ? workMinutes : ws.reduce((a, s) => a + countedMinutes(s, now), 0),
         goalSessions: t.weekly_goal_sessions,
         goalMinutes: t.weekly_goal_minutes,
       };
@@ -175,7 +178,6 @@ export function analyzeAdherence(input: {
   }
 
   // 3) Cuadre de trabajo (Holded vs. Outlook vs. plan).
-  const workBalance = reconcileWork({ days, types, events, sessions, now });
   for (const d of workBalance) {
     if (!d.flags.length) continue;
     const parts: string[] = [];

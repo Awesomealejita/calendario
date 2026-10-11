@@ -1,6 +1,8 @@
 import "server-only";
 
 const tenant = () => process.env.MS_TENANT_ID || "common";
+// Configurable para pruebas locales contra un simulador (scripts/mock-services.mjs).
+const loginBase = () => process.env.MS_LOGIN_BASE_URL || "https://login.microsoftonline.com";
 export const MS_SCOPES = ["offline_access", "User.Read", "Calendars.ReadWrite", "Tasks.ReadWrite"];
 
 export interface MsTokens {
@@ -23,11 +25,11 @@ export function authorizeUrl(state: string) {
     state,
     prompt: "select_account",
   });
-  return `https://login.microsoftonline.com/${tenant()}/oauth2/v2.0/authorize?${p}`;
+  return `${loginBase()}/${tenant()}/oauth2/v2.0/authorize?${p}`;
 }
 
 async function tokenRequest(body: Record<string, string>): Promise<MsTokens> {
-  const res = await fetch(`https://login.microsoftonline.com/${tenant()}/oauth2/v2.0/token`, {
+  const res = await fetch(`${loginBase()}/${tenant()}/oauth2/v2.0/token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({

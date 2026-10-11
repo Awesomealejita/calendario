@@ -103,10 +103,14 @@ export function CalendarView({ types, outlookConnected }: { types: ActivityType[
           plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
           locale={esLocale}
           timeZone="local"
-          initialView={mobile ? "timeGridDay" : "timeGridWeek"}
+          initialView={mobile ? "listWeek" : "timeGridWeek"}
+          views={{
+            timeGridDay: { titleFormat: { weekday: "short", day: "numeric", month: "short" } },
+            listWeek: { titleFormat: { day: "numeric", month: "short" }, noEventsContent: "Nada esta semana" },
+          }}
           headerToolbar={
             mobile
-              ? { left: "prev,next", center: "title", right: "timeGridDay,listWeek,dayGridMonth" }
+              ? { left: "prev,next", center: "title", right: "listWeek,timeGridDay,dayGridMonth" }
               : { left: "prev,next today", center: "title", right: "timeGridDay,timeGridWeek,dayGridMonth,listWeek" }
           }
           buttonText={{ day: "Día", week: "Semana", month: "Mes", list: "Agenda", today: "Hoy" }}

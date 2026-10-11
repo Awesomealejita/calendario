@@ -16,6 +16,19 @@ export function sessionMinutes(
   return Math.round((total - pausedMs(s.pauses, end)) / 60000);
 }
 
+/**
+ * Minutos que cuentan para cuadres y objetivos: una sesión que se quedó abierta en un día
+ * ya terminado (fichaje olvidado) no suma horas infinitas; se avisa aparte como "fichaje abierto".
+ */
+export function countedMinutes(
+  s: Pick<TimeSession, "started_at" | "ended_at" | "pauses">,
+  now: Date = new Date(),
+  tz = TIMEZONE,
+): number {
+  if (!s.ended_at && dayKey(s.started_at, tz) < dayKey(now, tz)) return 0;
+  return sessionMinutes(s, now);
+}
+
 export function pausedMs(pauses: Pause[], until: number): number {
   return pauses.reduce((acc, p) => {
     const pe = p.end ? ms(p.end) : until;
