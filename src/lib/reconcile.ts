@@ -15,8 +15,10 @@ export interface DayBalance {
   planned: number;
   /** Objetivo diario (objetivo semanal / 5 en días laborables). */
   expected: number;
-  /** clocked - expected (o tracked si no hay fichajes). */
-  delta: number;
+  /** clocked - expected (o tracked si no hay fichajes). Null en días futuros. */
+  delta: number | null;
+  /** Día posterior a hoy: aún no hay nada que cuadrar. */
+  future: boolean;
   flags: Array<"no_clock" | "overtime" | "short" | "meetings_outside" | "open_clock">;
 }
 
@@ -69,16 +71,19 @@ export function reconcileWork(params: {
       : 0;
     const expected = isWeekday(day) && workGoal ? Math.round(workGoal / 5) : 0;
     const actual = holded.length ? clocked : tracked;
-    const delta = actual - expected;
+    const future = day > today;
+    const delta = future ? null : actual - expected;
 
     const flags: DayBalance["flags"] = [];
     const finished = day < today;
     if (holded.some((s) => !s.ended_at) && finished) flags.push("open_clock");
-    if (expected && !holded.length && (finished || meetings > 0)) flags.push("no_clock");
-    if (expected && finished && actual && delta > toleranceMinutes) flags.push("overtime");
-    if (expected && finished && actual && delta < -toleranceMinutes) flags.push("short");
+    // Hoy solo se avisa de "sin fichar" si ya ha empezado alguna reunión.
+    const meetingStarted = meetingsEv.some((e) => new Date(e.starts_at) <= now);
+    if (expected && !holded.length && (finished || (day === today && meetingStarted))) flags.push("no_clock");
+    if (expected && finished && actual && delta !== null && delta > toleranceMinutes) flags.push("overtime");
+    if (expected && finished && actual && delta !== null && delta < -toleranceMinutes) flags.push("short");
     if (meetingsOutsideClock > 15) flags.push("meetings_outside");
 
-    return { day, clocked, tracked, meetings, meetingsOutsideClock, planned, expected, delta, flags };
+    return { day, clocked, tracked, meetings, meetingsOutsideClock, planned, expected, delta, future, flags };
   });
 }

@@ -115,7 +115,6 @@ export function CalendarView({ types, outlookConnected }: { types: ActivityType[
           }
           buttonText={{ day: "Día", week: "Semana", month: "Mes", list: "Agenda", today: "Hoy" }}
           height={mobile ? "calc(100dvh - 15rem)" : "calc(100dvh - 12rem)"}
-          slotMinTime="06:00:00"
           slotMaxTime="24:00:00"
           scrollTime="07:30:00"
           nowIndicator

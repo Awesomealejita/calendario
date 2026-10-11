@@ -60,3 +60,20 @@ describe("fichajes olvidados", () => {
     expect(d.clocked).toBe(120);
   });
 });
+
+describe("días futuros", () => {
+  it("no avisan ni calculan diferencia aunque tengan reuniones", () => {
+    const [d] = reconcileWork({
+      days: ["2026-10-14"], types: [work], now: new Date("2026-10-12T09:00:00Z"), sessions: [],
+      events: [ev({ starts_at: "2026-10-14T08:00:00Z", ends_at: "2026-10-14T09:00:00Z" })],
+    });
+    expect(d).toMatchObject({ future: true, delta: null, flags: [] });
+  });
+  it("hoy avisa de 'sin fichar' solo cuando ya empezó una reunión", () => {
+    const meeting = ev({ starts_at: "2026-10-12T10:00:00Z", ends_at: "2026-10-12T11:00:00Z" });
+    const before = reconcileWork({ days: ["2026-10-12"], types: [work], now: new Date("2026-10-12T09:00:00Z"), sessions: [], events: [meeting] });
+    const after = reconcileWork({ days: ["2026-10-12"], types: [work], now: new Date("2026-10-12T10:30:00Z"), sessions: [], events: [meeting] });
+    expect(before[0].flags).toEqual([]);
+    expect(after[0].flags).toContain("no_clock");
+  });
+});

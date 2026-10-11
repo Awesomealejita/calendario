@@ -23,7 +23,9 @@ const day = (offset, h, m = 0) => {
   return d;
 };
 const graphDate = (d) => ({ dateTime: d.toISOString().replace("Z", "0000"), timeZone: "UTC" });
-const meetings = [];
+let meetings, createdEvents, todo, holdedTimes;
+function init() {
+meetings = [];
 for (let off = -6; off <= 6; off++) {
   const wd = day(off, 12).getUTCDay();
   if (wd === 0 || wd === 6) continue;
@@ -32,15 +34,15 @@ for (let off = -6; off <= 6; off++) {
   if (off === -2) meetings.push({ id: "tarde", subject: "Revisión que se alargó", start: graphDate(day(off, 16)), end: graphDate(day(off, 18)) });
 }
 meetings.push({ id: "rechazada", subject: "Comité (rechazada)", start: graphDate(day(1, 10)), end: graphDate(day(1, 11)), responseStatus: { response: "declined" } });
-const createdEvents = new Map();
-const todo = [
+createdEvents = new Map();
+todo = [
   { id: "t1", title: "Enviar informe mensual", status: "notStarted", dueDateTime: graphDate(day(-1, 17)) },
   { id: "t2", title: "Revisar contrato proveedor", status: "notStarted", dueDateTime: graphDate(day(3, 17)) },
 ];
 
 // Fichajes de Holded en los últimos 5 días laborables: el más reciente sin cerrar,
 // el anterior alargado hasta las 18:15 y el tercero sin fichar (para ver los avisos del cuadre).
-const holdedTimes = [];
+holdedTimes = [];
 const pastWeekdays = [];
 for (let off = -1; pastWeekdays.length < 5; off--) {
   const wd = day(off, 12).getUTCDay();
@@ -56,6 +58,8 @@ pastWeekdays.forEach((off, i) => {
     pauses: [{ startTmp: Math.floor(day(off, 11).getTime() / 1000), endTmp: Math.floor(day(off, 11, 30).getTime() / 1000) }],
   });
 });
+}
+init();
 
 const ics = () => {
   const f = (d) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
@@ -107,6 +111,12 @@ createServer(async (req, res) => {
   const p = url.pathname;
   const body = req.method === "GET" ? "" : await readBody(req);
   log(req.method, p);
+
+  // Reinicia los datos simulados (lo usa la prueba e2e al empezar).
+  if (p === "/__reset" && req.method === "POST") {
+    init();
+    return json(res, 200, { ok: true });
+  }
 
   // --- Microsoft login ---
   if (/^\/ms\/[^/]+\/oauth2\/v2\.0\/authorize$/.test(p)) {

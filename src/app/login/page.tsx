@@ -1,11 +1,13 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  const [error, setError] = useState("");
+  const linkFailed = useSearchParams().get("error") === "link";
+  const [error, setError] = useState(linkFailed ? "El enlace ha caducado o ya se usó. Pide uno nuevo." : "");
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,9 +43,17 @@ export default function LoginPage() {
           <button className="btn-primary w-full" disabled={state === "sending"}>
             {state === "sending" ? "Enviando…" : "Entrar con enlace mágico"}
           </button>
-          {state === "error" && <p className="text-sm text-red">{error}</p>}
+          {error && <p className="text-sm text-red">{error}</p>}
         </form>
       )}
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

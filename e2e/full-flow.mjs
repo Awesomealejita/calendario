@@ -15,6 +15,9 @@ const env = Object.fromEntries(
   readFileSync(".env.local", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)]),
 );
 
+// Datos simulados limpios en cada ejecución.
+await fetch("http://localhost:4010/__reset", { method: "POST" }).catch(() => {});
+
 // Precalienta las rutas: en `next dev` la primera compilación de cada página puede tardar.
 for (const r of ["/login", "/calendar", "/timer", "/insights", "/settings", "/api/events?start=a&end=b"]) {
   await fetch(`${APP}${r}`, { redirect: "manual" }).catch(() => {});
@@ -28,6 +31,7 @@ const step = async (name, fn) => {
     console.log("✅", name);
   } catch (e) {
     results.push(["❌", name, e.message.split("\n")[0]]);
+    await page.screenshot({ path: `${OUT}/fallo-${results.length}.png`, fullPage: true }).catch(() => {});
     console.log("❌", name, "→", e.message.split("\n")[0]);
   }
 };
@@ -104,7 +108,12 @@ await step("Crear un gym ayer a las 18:00 desde el formulario", async () => {
   await page.fill("#ev-end", `${d}T19:00`);
   await page.click("form >> text=Guardar");
   await page.waitForSelector("#ev-title", { state: "detached" });
+  // "Ayer" puede caer en la semana anterior: se comprueba en la vista de agenda de esa fecha.
+  await page.click("text=Agenda");
+  if (!(await page.locator(".fc-event >> text=Pierna").count())) await page.click('button[title="Semana anterior"], .fc-prev-button');
   await page.waitForSelector(".fc-event >> text=Pierna");
+  await page.click(".fc-today-button").catch(() => {});
+  await page.click("text=Semana");
   await page.screenshot({ path: `${OUT}/03-calendario-semana.png` });
 });
 
@@ -156,8 +165,10 @@ await step("Asistente: analizar, ver sugerencias y cuadre de horas", async () =>
   await page.goto(`${APP}/insights`);
   await page.click("text=Analizar ahora");
   await page.waitForSelector("text=[Simulado] Recupera el gym");
-  await page.waitForSelector("text=Sin fichar");
-  await page.waitForSelector("text=Fichaje abierto");
+  // Los avisos de días pasados pueden estar en la semana anterior (p. ej. si hoy es lunes).
+  if (!(await page.locator("td >> text=Fichaje abierto").count())) await page.click('a[aria-label="Semana anterior"]');
+  await page.waitForSelector("td >> text=Sin fichar");
+  await page.waitForSelector("td >> text=Fichaje abierto");
   await page.screenshot({ path: `${OUT}/05-asistente.png`, fullPage: true });
 });
 
