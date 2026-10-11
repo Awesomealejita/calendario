@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+/* Paleta: #FFCF9C #FF8C6B #E8543F #7C3F82 #2C2153 */
+:root {
+  --peach: #ffcf9c;
+  --coral: #ff8c6b;
+  --red: #e8543f;
+  --plum: #7c3f82;
+  --night: #2c2153;
+
+  --bg: #fff8f0;
+  --surface: #ffffff;
+  --surface-2: #fff1e2;
+  --text: #2c2153;
+  --muted: #6b5f86;
+  --border: #f3dcc4;
+  --accent: #e8543f;
+  --accent-text: #ffffff;
+  --focus: #7c3f82;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1b1438;
+    --surface: #2c2153;
+    --surface-2: #362a63;
+    --text: #fff3e6;
+    --muted: #c9b9e0;
+    --border: #45386f;
+    --accent: #ff8c6b;
+    --accent-text: #2c2153;
+    --focus: #ffcf9c;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1b1438;
+  --surface: #2c2153;
+  --surface-2: #362a63;
+  --text: #fff3e6;
+  --muted: #c9b9e0;
+  --border: #45386f;
+  --accent: #ff8c6b;
+  --accent-text: #2c2153;
+  --focus: #ffcf9c;
+}
+
+@theme inline {
+  --color-peach: var(--peach);
+  --color-coral: var(--coral);
+  --color-red: var(--red);
+  --color-plum: var(--plum);
+  --color-night: var(--night);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-text: var(--accent-text);
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+body {
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@utility card {
+  @apply rounded-2xl border border-border bg-surface p-4 shadow-[0_1px_0_rgba(44,33,83,0.04)];
+}
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-50;
+}
+@utility btn-primary {
+  @apply btn bg-accent text-accent-text hover:brightness-105;
+}
+@utility btn-ghost {
+  @apply btn border border-border bg-surface text-text hover:bg-surface-2;
+}
+@utility input {
+  @apply w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-muted;
+}
+@utility label {
+  @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-muted;
+}
+
+/* FullCalendar con la paleta */
+.fc {
+  --fc-border-color: var(--border);
+  --fc-page-bg-color: var(--surface);
+  --fc-neutral-bg-color: var(--surface-2);
+  --fc-today-bg-color: color-mix(in srgb, var(--peach) 28%, transparent);
+  --fc-now-indicator-color: var(--red);
+  --fc-button-bg-color: var(--surface);
+  --fc-button-border-color: var(--border);
+  --fc-button-text-color: var(--text);
+  --fc-button-hover-bg-color: var(--surface-2);
+  --fc-button-hover-border-color: var(--border);
+  --fc-button-active-bg-color: var(--plum);
+  --fc-button-active-border-color: var(--plum);
+  --fc-list-event-hover-bg-color: var(--surface-2);
+  font-size: 0.85rem;
+}
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  color: #fff;
+}
+.fc .fc-toolbar-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.fc .fc-event.ev-missed {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+.fc .fc-event.ev-done::after {
+  content: "✓";
+  position: absolute;
+  right: 4px;
+  top: 2px;
+  font-weight: 700;
+}
+.fc .fc-event.ev-cancelled {
+  opacity: 0.35;
+}

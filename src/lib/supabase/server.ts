@@ -1,0 +1,28 @@
+import "server-only";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
+export async function supabaseServer() {
+  const store = await cookies();
+  return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    cookies: {
+      getAll: () => store.getAll(),
+      setAll: (list) => {
+        try {
+          list.forEach(({ name, value, options }) => store.set(name, value, options));
+        } catch {
+          // Llamado desde un Server Component: el proxy refresca la sesión.
+        }
+      },
+    },
+  });
+}
+
+/** Cliente con la sesión del usuario + su id. Redirige a /login si no hay sesión. */
+export async function requireUser() {
+  const supabase = await supabaseServer();
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) redirect("/login");
+  return { supabase, user: data.user };
+}
