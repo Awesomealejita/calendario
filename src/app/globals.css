@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* Tema: claro por defecto; "dark" fuerza oscuro y "auto" sigue al sistema (Ajustes → Apariencia). */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where([data-theme="auto"], [data-theme="auto"] *) {
+      @slot;
+    }
+  }
+}
+
 /* Paleta: #FFCF9C #FF8C6B #E8543F #7C3F82 #2C2153 */
 :root {
   --peach: #ffcf9c;
@@ -21,7 +33,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root[data-theme="auto"] {
     --bg: #1b1438;
     --surface: #2c2153;
     --surface-2: #362a63;
