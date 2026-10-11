@@ -4,7 +4,7 @@ import { isCronAuthorized } from "@/lib/cron";
 import { syncIcs, syncOutlook } from "@/integrations/outlook/sync";
 import { syncHolded } from "@/integrations/holded/sync";
 
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 /** Sincroniza Outlook / ICS / Holded de todos los usuarios con integraciones. */
 export async function GET(req: Request) {

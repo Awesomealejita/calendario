@@ -7,16 +7,18 @@ import { chromium } from "playwright-core";
 import { readFileSync, mkdirSync } from "node:fs";
 
 const APP = process.env.APP_URL || "http://localhost:3000";
-const MAIL = "http://127.0.0.1:54324";
 const OUT = process.argv[2] || "e2e/screenshots";
-const EMAIL = process.env.MOCK_EMPLOYEE_EMAIL || "yo@example.com";
+// E2E_CLOUD=1: contra el despliegue real (sin simulador): se saltan Outlook/Holded/Claude simulados
+// y se usa un usuario temporal que se borra al final.
+const CLOUD = process.env.E2E_CLOUD === "1";
+const EMAIL = CLOUD ? `e2e-${Date.now()}@example.com` : process.env.MOCK_EMPLOYEE_EMAIL || "yo@example.com";
 mkdirSync(OUT, { recursive: true });
 const env = Object.fromEntries(
-  readFileSync(".env.local", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)]),
+  readFileSync(process.env.E2E_ENV_FILE || ".env.local", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)]),
 );
 
 // Datos simulados limpios en cada ejecución.
-await fetch("http://localhost:4010/__reset", { method: "POST" }).catch(() => {});
+if (!CLOUD) await fetch("http://localhost:4010/__reset", { method: "POST" }).catch(() => {});
 
 // Precalienta las rutas: en `next dev` la primera compilación de cada página puede tardar.
 for (const r of ["/login", "/calendar", "/timer", "/insights", "/settings", "/api/events?start=a&end=b"]) {
@@ -24,7 +26,16 @@ for (const r of ["/login", "/calendar", "/timer", "/insights", "/settings", "/ap
 }
 
 const results = [];
+const NEEDS_MOCKS = [
+  "Conectar Outlook", "Plan B ICS", "Conectar Holded", "El calendario muestra reuniones", "Crear evento de trabajo y enviarlo",
+  "Completar una tarea de To Do", "Cronómetro de trabajo ficha en Holded", "Chat del asistente",
+];
 const step = async (name, fn) => {
+  if (CLOUD && NEEDS_MOCKS.some((n) => name.startsWith(n))) {
+    results.push(["⏭️", name]);
+    console.log("⏭️", name, "(necesita el simulador)");
+    return;
+  }
   try {
     await fn();
     results.push(["✅", name]);
@@ -51,24 +62,34 @@ await step("Sin sesión redirige a /login", async () => {
   await page.waitForURL(/\/login/);
 });
 
-await step("Login con enlace mágico (correo en Mailpit)", async () => {
-  await fetch(`${MAIL}/api/v1/messages`, { method: "DELETE" });
+const SUPA = env.NEXT_PUBLIC_SUPABASE_URL;
+const admin = { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`, "Content-Type": "application/json" };
+const createdUserIds = [];
+const PASSWORD = "prueba-e2e-" + Math.random().toString(36).slice(2, 10);
+
+await step("Login con email y contraseña (cuenta creada por admin)", async () => {
+  const r = await fetch(`${SUPA}/auth/v1/admin/users`, { method: "POST", headers: admin, body: JSON.stringify({ email: EMAIL, password: PASSWORD, email_confirm: true }) });
+  expect(r.ok, `crear usuario: ${r.status}`);
+  createdUserIds.push((await r.json()).id);
   await page.fill("#email", EMAIL);
-  await page.click("text=Entrar con enlace mágico");
-  await page.waitForSelector("text=Revisa tu correo");
-  let msg;
-  for (let i = 0; i < 20 && !msg; i++) {
-    const list = await (await fetch(`${MAIL}/api/v1/messages`)).json();
-    msg = list.messages?.[0];
-    if (!msg) await new Promise((r) => setTimeout(r, 500));
-  }
-  expect(msg, "no llegó el correo");
-  const full = await (await fetch(`${MAIL}/api/v1/message/${msg.ID}`)).json();
-  const link = (full.Text.match(/https?:\/\/\S+verify\S+/) || [])[0];
-  expect(link, "no hay enlace en el correo");
-  await page.goto(link.replace(/&amp;/g, "&"));
+  await page.fill("#password", "incorrecta");
+  await page.click('button:has-text("Entrar")');
+  await page.waitForSelector("text=Email o contraseña incorrectos");
+  await page.fill("#password", PASSWORD);
+  await page.click('button:has-text("Entrar")');
   await page.waitForURL(/\/calendar/);
   await page.screenshot({ path: `${OUT}/01-calendario-vacio.png` });
+});
+
+await step("Enlace por email: abre sesión en otro navegador y no se puede reutilizar", async () => {
+  const link = await (await fetch(`${SUPA}/auth/v1/admin/generate_link`, { method: "POST", headers: admin, body: JSON.stringify({ type: "magiclink", email: EMAIL }) })).json();
+  const other = await browser.newContext();
+  const p = await other.newPage();
+  await p.goto(`${APP}/auth/callback?token_hash=${link.hashed_token}&type=email`);
+  await p.waitForURL(/\/calendar/);
+  await p.goto(`${APP}/auth/callback?token_hash=${link.hashed_token}&type=email`);
+  await p.waitForURL(/error=link/);
+  await other.close();
 });
 
 await step("Conectar Outlook (OAuth simulado) y sincronizar reuniones + To Do", async () => {
@@ -164,7 +185,9 @@ await step("La API de eventos valida los parámetros", async () => {
 await step("Asistente: analizar, ver sugerencias y cuadre de horas", async () => {
   await page.goto(`${APP}/insights`);
   await page.click("text=Analizar ahora");
-  await page.waitForSelector("text=[Simulado] Recupera el gym");
+  await page.waitForSelector(CLOUD ? "text=Recupera la sesión" : "text=[Simulado] Recupera el gym");
+  await page.waitForSelector("text=Cuadre de horas");
+  if (CLOUD) return void (await page.screenshot({ path: `${OUT}/05-asistente.png`, fullPage: true }));
   // Los avisos de días pasados pueden estar en la semana anterior (p. ej. si hoy es lunes).
   if (!(await page.locator("td >> text=Fichaje abierto").count())) await page.click('a[aria-label="Semana anterior"]');
   await page.waitForSelector("td >> text=Sin fichar");
@@ -174,19 +197,19 @@ await step("Asistente: analizar, ver sugerencias y cuadre de horas", async () =>
 
 await step("Aceptar sugerencia crea el gym en un hueco libre", async () => {
   await page.click("text=Añadir al calendario");
-  await page.waitForSelector("text=[Simulado] Recupera el gym", { state: "detached" });
-  const r = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/events?title=eq.Gym%20(recuperaci%C3%B3n)&select=id,metadata`, {
+  await page.waitForSelector(CLOUD ? "text=Recupera la sesión" : "text=[Simulado] Recupera el gym", { state: "detached" });
+  const r = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/events?title=eq.Gym%20(recuperaci%C3%B3n)&select=id,metadata,user_id`, {
     headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` },
   });
-  const rows = await r.json();
+  const rows = (await r.json()).filter((x) => x.user_id === createdUserIds[0]);
   expect(rows.length === 1 && rows[0].metadata.createdBy === "ai", `esperaba 1 evento IA, hay ${rows.length}`);
 });
 
 await step("El gym de ayer se marcó como 'no acudido'", async () => {
-  const r = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/events?title=eq.Pierna&select=status`, {
+  const r = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/events?title=eq.Pierna&select=status,user_id`, {
     headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` },
   });
-  const [ev] = await r.json();
+  const ev = (await r.json()).find((x) => x.user_id === createdUserIds[0]);
   expect(ev?.status === "missed", `estado: ${ev?.status}`);
 });
 
@@ -206,15 +229,18 @@ await step("Crons protegidos: 401 sin secreto, 200 con secreto", async () => {
 });
 
 await step("Otro usuario no ve tus datos (RLS)", async () => {
-  const other = await (
-    await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/signup`, {
+  const otherEmail = `otro-${Date.now()}@example.com`;
+  const created = await (await fetch(`${SUPA}/auth/v1/admin/users`, { method: "POST", headers: admin, body: JSON.stringify({ email: otherEmail, password: PASSWORD, email_confirm: true }) })).json();
+  createdUserIds.push(created.id);
+  const session = await (
+    await fetch(`${SUPA}/auth/v1/token?grant_type=password`, {
       method: "POST",
       headers: { apikey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY, "Content-Type": "application/json" },
-      body: JSON.stringify({ email: `otro${Date.now()}@example.com`, password: "contraseña-segura-123" }),
+      body: JSON.stringify({ email: otherEmail, password: PASSWORD }),
     })
   ).json();
-  const token = other.access_token;
-  expect(token, "no se pudo crear el segundo usuario");
+  const token = session.access_token;
+  expect(token, "no se pudo iniciar sesión con el segundo usuario");
   const get = async (t) =>
     (await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/${t}?select=*`, { headers: { apikey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` } })).json();
   expect((await get("events")).length === 0, "ve eventos ajenos");
@@ -245,6 +271,8 @@ await step("Sin errores de JavaScript en el navegador", async () => {
 });
 
 await browser.close();
+// Limpieza: borra los usuarios de prueba (y en cascada todos sus datos).
+for (const id of createdUserIds) await fetch(`${SUPA}/auth/v1/admin/users/${id}`, { method: "DELETE", headers: admin });
 const failed = results.filter((r) => r[0] === "❌");
 console.log(`\n${results.length - failed.length}/${results.length} pasos OK`);
 process.exit(failed.length ? 1 : 0);

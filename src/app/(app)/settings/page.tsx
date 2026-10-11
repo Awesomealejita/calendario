@@ -1,5 +1,6 @@
 import { IntegrationsPanel, PushPanel, TypesPanel } from "@/components/SettingsPanels";
 import { SignOut } from "@/components/SignOut";
+import { PasswordPanel } from "@/components/PasswordPanel";
 import { requireUser } from "@/lib/supabase/server";
 import type { ActivityType } from "@/lib/types";
 
@@ -18,6 +19,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       <div className="space-y-4">
         <TypesPanel types={(types ?? []) as ActivityType[]} />
         <PushPanel vapidKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY} />
+        <PasswordPanel />
         <section className="card flex items-center justify-between">
           <p className="text-sm text-muted">{user.email}</p>
           <SignOut />

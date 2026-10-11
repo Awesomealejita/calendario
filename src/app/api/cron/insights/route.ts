@@ -4,7 +4,7 @@ import { isCronAuthorized } from "@/lib/cron";
 import { runInsights } from "@/ai/suggest";
 import { sendPush } from "@/lib/push";
 
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 /** Análisis diario: marca no acudidos, genera sugerencias y avisa por push si hay algo importante. */
 export async function GET(req: Request) {
