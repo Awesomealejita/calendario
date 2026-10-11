@@ -77,3 +77,10 @@ describe("días futuros", () => {
     expect(after[0].flags).toContain("no_clock");
   });
 });
+
+describe("hoy sin actividad", () => {
+  it("no muestra diferencia hasta que hay algo registrado", () => {
+    const [d] = reconcileWork({ days: ["2026-10-12"], types: [work], now: new Date("2026-10-12T06:00:00Z"), sessions: [], events: [] });
+    expect(d.delta).toBeNull();
+  });
+});

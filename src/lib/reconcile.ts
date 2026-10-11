@@ -72,7 +72,8 @@ export function reconcileWork(params: {
     const expected = isWeekday(day) && workGoal ? Math.round(workGoal / 5) : 0;
     const actual = holded.length ? clocked : tracked;
     const future = day > today;
-    const delta = future ? null : actual - expected;
+    // Hoy solo se muestra la diferencia cuando ya hay algo registrado (si no, saldría "-8h" a primera hora).
+    const delta = future || (day === today && actual === 0) ? null : actual - expected;
 
     const flags: DayBalance["flags"] = [];
     const finished = day < today;
