@@ -1,8 +1,11 @@
+import { HeartPulse } from "lucide-react";
+import { CardTitle } from "@/components/icons";
+
 /** Instrucciones para enviar los minutos de entreno a Apple Salud con un Atajo de iOS. */
 export function AppleHealthPanel() {
   return (
     <section className="card">
-      <h2 className="font-bold">Apple Salud</h2>
+      <CardTitle icon={HeartPulse}>Apple Salud</CardTitle>
       <p className="mt-1 text-sm text-muted">
         Una web no puede escribir en Salud directamente, así que se hace con un Atajo de iPhone (se configura una vez). Después, al terminar el gym verás el botón
         «Guardar en Apple Salud» en el cronómetro.

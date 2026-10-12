@@ -3,6 +3,8 @@ import { TIMEZONE } from "@/lib/time";
 import { useState, useTransition } from "react";
 import type { ActivityType } from "@/lib/types";
 import { deleteActivityType, disconnect, saveActivityType, saveHolded, saveIcsUrl, syncNow } from "@/app/(app)/settings/actions";
+import { Bell, Blocks, Plug, Timer } from "lucide-react";
+import { CardTitle, ModuleIcon } from "@/components/icons";
 
 interface IntegrationState {
   provider: string;
@@ -12,7 +14,7 @@ interface IntegrationState {
 }
 
 const OUTLOOK_MSG: Record<string, string> = {
-  connected: "Outlook conectado ✅",
+  connected: "Outlook conectado.",
   needs_admin: "Tu empresa exige aprobación del administrador para conectar apps. Usa la opción ICS de abajo mientras tanto (o pide a IT que apruebe la app).",
   missing_config: "Falta configurar MS_CLIENT_ID en el servidor.",
   bad_state: "La sesión de conexión caducó, inténtalo de nuevo.",
@@ -31,12 +33,12 @@ function useAction() {
 }
 
 const Msg = ({ m }: { m: { text: string; ok: boolean } | null }) =>
-  m ? <p className={`mt-2 text-sm ${m.ok ? "text-plum dark:text-peach" : "text-red"}`}>{m.text}</p> : null;
+  m ? <p className={`mt-2 text-sm ${m.ok ? "text-plum dark:text-peach" : "text-danger"}`}>{m.text}</p> : null;
 
 const Status = ({ s }: { s?: IntegrationState }) =>
   s ? (
     <p className="text-xs text-muted">
-      {s.last_error ? <span className="text-red">Error: {s.last_error}</span> : s.last_synced_at ? `Última sincronización: ${new Date(s.last_synced_at).toLocaleString("es-ES", { timeZone: TIMEZONE })}` : "Pendiente de sincronizar"}
+      {s.last_error ? <span className="text-danger">Error: {s.last_error}</span> : s.last_synced_at ? `Última sincronización: ${new Date(s.last_synced_at).toLocaleString("es-ES", { timeZone: TIMEZONE })}` : "Pendiente de sincronizar"}
     </p>
   ) : null;
 
@@ -53,7 +55,7 @@ export function IntegrationsPanel({ states, outlookParam }: { states: Integratio
   return (
     <section className="card space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold">🔌 Integraciones</h2>
+        <CardTitle icon={Plug}>Integraciones</CardTitle>
         <button className="btn-ghost text-xs" disabled={a.pending} onClick={() => a.run(syncNow)}>{a.pending ? "Sincronizando…" : "Sincronizar ahora"}</button>
       </div>
       <Msg m={a.msg} />
@@ -61,7 +63,7 @@ export function IntegrationsPanel({ states, outlookParam }: { states: Integratio
       <div>
         <h3 className="font-semibold">Outlook (Microsoft 365)</h3>
         <p className="mb-2 text-sm text-muted">Reuniones del calendario y tareas de To Do, en ambos sentidos. Se sincroniza cada 10 min.</p>
-        {outlookParam && <p className={`mb-2 text-sm ${outlookParam === "connected" ? "text-plum dark:text-peach" : "text-red"}`}>{OUTLOOK_MSG[outlookParam] ?? outlookParam}</p>}
+        {outlookParam && <p className={`mb-2 text-sm ${outlookParam === "connected" ? "text-plum dark:text-peach" : "text-danger"}`}>{OUTLOOK_MSG[outlookParam] ?? outlookParam}</p>}
         {outlook ? (
           <div className="flex items-center justify-between gap-2">
             <Status s={outlook} />
@@ -121,8 +123,8 @@ export function TypesPanel({ types }: { types: ActivityType[] }) {
   return (
     <section className="card">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-bold">🧩 Módulos y objetivos</h2>
-        <button className="btn-ghost text-xs" onClick={() => setEditing({ name: "", color: "#7C3F82", icon: "✨", has_timer: false, weekly_goal_sessions: null, weekly_goal_minutes: null })}>
+        <CardTitle icon={Blocks}>Módulos y objetivos</CardTitle>
+        <button className="btn-ghost text-xs" onClick={() => setEditing({ name: "", color: "#7C3F82", icon: "", has_timer: false, weekly_goal_sessions: null, weekly_goal_minutes: null })}>
           + Categoría
         </button>
       </div>
@@ -130,9 +132,9 @@ export function TypesPanel({ types }: { types: ActivityType[] }) {
         {types.map((t) => (
           <li key={t.id} className="flex items-center gap-3 py-2">
             <span className="h-4 w-4 rounded-full" style={{ background: t.color }} />
-            <span className="flex-1 text-sm font-semibold">{t.icon} {t.name}</span>
+            <span className="flex flex-1 items-center gap-2 text-sm font-semibold"><ModuleIcon module={t.module} />{t.name}</span>
             <span className="text-xs text-muted">
-              {t.has_timer && "⏱️ "}
+              {t.has_timer && <Timer aria-label="con cronómetro" size={14} className="mr-1 inline" />}
               {t.weekly_goal_sessions ? `${t.weekly_goal_sessions}×/sem ` : ""}
               {t.weekly_goal_minutes ? `${Math.round(t.weekly_goal_minutes / 60)}h/sem` : ""}
             </span>
@@ -160,9 +162,8 @@ export function TypesPanel({ types }: { types: ActivityType[] }) {
             });
           }}
         >
-          <div className="grid grid-cols-[1fr_4rem_4rem] gap-2">
+          <div className="grid grid-cols-[1fr_5rem] gap-2">
             <input className="input" placeholder="Nombre" required value={editing.name ?? ""} onChange={(e) => setEditing({ ...editing, name: e.target.value })} aria-label="Nombre" />
-            <input className="input text-center" value={editing.icon ?? ""} onChange={(e) => setEditing({ ...editing, icon: e.target.value })} aria-label="Icono" />
             <select className="input px-1" value={editing.color} onChange={(e) => setEditing({ ...editing, color: e.target.value })} aria-label="Color" style={{ background: editing.color }}>
               {["#FFCF9C", "#FF8C6B", "#E8543F", "#7C3F82", "#2C2153"].map((c) => (
                 <option key={c} value={c} style={{ background: c }}>{c}</option>
@@ -184,7 +185,7 @@ export function TypesPanel({ types }: { types: ActivityType[] }) {
             <button className="btn-primary" disabled={a.pending}>Guardar</button>
             <button type="button" className="btn-ghost" onClick={() => setEditing(null)}>Cancelar</button>
             {editing.id && editing.module === "custom" && (
-              <button type="button" className="btn-ghost ml-auto text-red" onClick={() => a.run(async () => { const r = await deleteActivityType(editing.id!); if (r.ok) setEditing(null); return r; })}>Borrar</button>
+              <button type="button" className="btn-ghost ml-auto text-danger" onClick={() => a.run(async () => { const r = await deleteActivityType(editing.id!); if (r.ok) setEditing(null); return r; })}>Borrar</button>
             )}
           </div>
         </form>
@@ -206,14 +207,14 @@ export function PushPanel({ vapidKey }: { vapidKey: string | undefined }) {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(vapidKey!) });
       const r = await fetch("/api/push", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(sub) });
-      setState(r.ok ? "Notificaciones activadas ✅" : "No se pudo guardar la suscripción.");
+      setState(r.ok ? "Notificaciones activadas." : "No se pudo guardar la suscripción.");
     } catch (e) {
       setState((e as Error).message);
     }
   }
   return (
     <section className="card">
-      <h2 className="font-bold">🔔 Notificaciones</h2>
+      <CardTitle icon={Bell}>Notificaciones</CardTitle>
       <p className="mb-3 text-sm text-muted">El asistente te avisa cuando detecta que te saltas el gym o se descuadran tus horas.</p>
       <button className="btn-primary" onClick={enable} disabled={!vapidKey}>Activar en este dispositivo</button>
       {!vapidKey && <p className="mt-2 text-xs text-muted">Falta NEXT_PUBLIC_VAPID_PUBLIC_KEY en el servidor.</p>}

@@ -24,7 +24,7 @@ export function SmartAlerts({ alerts }: { alerts: SmartAlert[] }) {
     <div className="space-y-2" role="region" aria-label="Avisos">
       {visible.map((a) => (
         <div key={a.id} className={`card flex flex-col gap-3 border-l-4 p-3 sm:flex-row sm:items-center ${a.kind === "conflict" ? "border-l-red" : "border-l-coral"}`}>
-          <svg viewBox="0 0 24 24" className={`hidden h-6 w-6 shrink-0 sm:block ${a.kind === "conflict" ? "text-red" : "text-coral"}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+          <svg viewBox="0 0 24 24" className={`hidden h-6 w-6 shrink-0 sm:block ${a.kind === "conflict" ? "text-danger" : "text-coral"}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
             <circle cx="12" cy="12" r="9" />
             <path d="M12 7v5l3 2" />
           </svg>
@@ -60,7 +60,7 @@ export function SmartAlerts({ alerts }: { alerts: SmartAlert[] }) {
           </div>
         </div>
       ))}
-      {error && <p className="text-sm text-red">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
 }

@@ -27,6 +27,7 @@
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.117.3",
     "date-fns": "^4.1.0",
+    "lucide-react": "^1.55.0",
     "next": "^16.4.0",
     "node-ical": "^0.21.0",
     "react": "^19.3.0",

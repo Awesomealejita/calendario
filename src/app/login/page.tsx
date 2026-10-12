@@ -48,7 +48,7 @@ function LoginForm() {
       <p className="mt-2 text-muted">Gym, trabajo, citas y quehaceres. Con Outlook, Holded y un asistente que te echa un cable.</p>
       {state === "sent" ? (
         <div className="card mt-8">
-          <p className="font-semibold">Revisa tu correo 📬</p>
+          <p className="font-semibold">Revisa tu correo</p>
           <p className="mt-1 text-sm text-muted">Te hemos enviado un enlace para entrar a {email}.</p>
         </div>
       ) : (
@@ -67,7 +67,7 @@ function LoginForm() {
           <button type="button" className="w-full text-center text-sm text-muted underline" onClick={() => setMode(mode === "password" ? "link" : "password")}>
             {mode === "password" ? "Prefiero un enlace por email" : "Entrar con contraseña"}
           </button>
-          {error && <p className="text-sm text-red">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
         </form>
       )}
     </main>

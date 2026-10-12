@@ -26,8 +26,11 @@
   --text: #2c2153;
   --muted: #6b5f86;
   --border: #f3dcc4;
-  --accent: #e8543f;
-  --accent-text: #ffffff;
+  --accent: #ff8c6b;
+  --accent-text: #2c2153;
+  --danger: #b4361f;
+  --danger-bg: #fbe4e0;
+  --shadow: 0 1px 2px rgba(44, 33, 83, 0.05), 0 10px 28px -14px rgba(44, 33, 83, 0.18);
   --focus: #7c3f82;
   --today: rgba(255, 207, 156, 0.28);
   --chart-bar: #e8543f;
@@ -44,6 +47,9 @@
     --accent: #ff8c6b;
     --accent-text: #2c2153;
     --focus: #ffcf9c;
+    --danger: #ff9a80;
+    --danger-bg: #5b2e4e;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px -14px rgba(0, 0, 0, 0.6);
     --today: rgba(124, 63, 130, 0.22);
   }
 }
@@ -57,6 +63,9 @@
   --accent: #ff8c6b;
   --accent-text: #2c2153;
   --focus: #ffcf9c;
+  --danger: #ff9a80;
+  --danger-bg: #5b2e4e;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px -14px rgba(0, 0, 0, 0.6);
   --today: rgba(124, 63, 130, 0.22);
 }
 
@@ -74,7 +83,42 @@
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-text: var(--accent-text);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+button,
+[role="button"],
+summary,
+label[for],
+select {
+  cursor: pointer;
+}
+
+/* En pantallas táctiles, todo lo pulsable mide al menos 44 px. */
+@media (pointer: coarse) {
+  .btn,
+  .btn-primary,
+  .btn-ghost,
+  .input {
+    min-height: 44px;
+  }
+  .chip {
+    min-height: 40px;
+  }
+}
+
+/* Respeta "reducir movimiento" del sistema. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 html,
@@ -92,10 +136,10 @@ body {
 }
 
 @utility card {
-  @apply rounded-2xl border border-border bg-surface p-4 shadow-[0_1px_0_rgba(44,33,83,0.04)];
+  @apply rounded-3xl border border-border bg-surface p-4 shadow-[var(--shadow)] sm:p-5;
 }
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-50;
+  @apply inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition duration-150 ease-out active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50;
 }
 @utility btn-primary {
   @apply btn bg-accent text-accent-text hover:brightness-105;
@@ -105,6 +149,9 @@ body {
 }
 @utility input {
   @apply w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-muted;
+}
+@utility chip {
+  @apply inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition duration-150 ease-out;
 }
 @utility label {
   @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-muted;
@@ -156,6 +203,9 @@ body {
 }
 .fc .fc-event.ev-done {
   position: relative;
+}
+.fc .fc-event {
+  border-radius: 8px;
 }
 .fc .fc-event.ev-done::after {
   content: "✓";

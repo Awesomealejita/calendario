@@ -1,4 +1,6 @@
 import type { Achievement, WeekStat } from "@/lib/streaks";
+import { Flame, Star } from "lucide-react";
+import { CardTitle } from "@/components/icons";
 
 /** Gráfico de barras de sesiones por semana con la línea del objetivo (SVG, sin dependencias). */
 function WeeksChart({ weeks, goal }: { weeks: WeekStat[]; goal: number | null }) {
@@ -75,7 +77,7 @@ export function StreaksCard({
   const unlocked = list.filter((a) => a.unlocked).length;
   return (
     <section className="card">
-      <h2 className="font-bold">Rachas y logros</h2>
+      <CardTitle icon={Flame}>Rachas y logros</CardTitle>
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div className="rounded-xl bg-surface-2 p-3">
           <p className="text-3xl font-extrabold tabular-nums">{gymStreak}</p>
@@ -92,7 +94,7 @@ export function StreaksCard({
         {list.map((a) => (
           <li key={a.id} className={`rounded-xl border p-3 ${a.unlocked ? "border-transparent bg-peach/40" : "border-border"}`}>
             <p className={`text-sm font-semibold ${a.unlocked ? "" : "text-muted"}`}>
-              <span aria-hidden>{a.unlocked ? "★ " : "☆ "}</span>
+              <Star aria-hidden size={14} className={`mr-1 inline -translate-y-px ${a.unlocked ? "fill-current text-coral" : ""}`} />
               {a.title}
               <span className="sr-only">{a.unlocked ? " (conseguido)" : " (pendiente)"}</span>
             </p>

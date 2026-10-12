@@ -8,11 +8,12 @@ import interactionPlugin from "@fullcalendar/interaction";
 import esLocale from "@fullcalendar/core/locales/es";
 import type { EventDropArg, EventInput } from "@fullcalendar/core";
 import type { EventResizeDoneArg } from "@fullcalendar/interaction";
-import type { ActivityType, CalendarEvent } from "@/lib/types";
+import type { ActivityType, CalendarEvent, ModuleKey } from "@/lib/types";
 import { EventDialog, type DraftEvent } from "@/components/EventDialog";
 import { useMediaQuery } from "@/components/hooks";
 import { QuickAdd } from "@/components/QuickAdd";
 import { moveEvent } from "@/app/(app)/calendar/actions";
+import { ModuleIcon } from "@/components/icons";
 
 export function CalendarView({ types, outlookConnected }: { types: ActivityType[]; outlookConnected: boolean }) {
   const ref = useRef<FullCalendar>(null);
@@ -95,19 +96,20 @@ export function CalendarView({ types, outlookConnected }: { types: ActivityType[
                 else n.add(t.id);
                 setHidden(n);
               }}
-              className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${off ? "border-border text-muted line-through" : "border-transparent text-night"}`}
-              style={off ? undefined : { background: t.color }}
+              className={`chip ${off ? "border-border text-muted line-through" : "text-text"}`}
+              style={off ? undefined : { background: `color-mix(in srgb, ${t.color} 30%, var(--surface))`, borderColor: t.color }}
               aria-pressed={!off}
             >
-              {t.icon} {t.name}
+              <ModuleIcon module={t.module} size={14} />
+              {t.name}
             </button>
           );
         })}
         <div className="ml-auto flex gap-2">
           {types.filter((t) => t.module === "gym" || t.module === "appointments").map((t) => (
-            <button key={t.id} className="btn-ghost px-3 py-1 text-xs" onClick={() => quickAdd(t.id)}>+ {t.name}</button>
+            <button key={t.id} className="btn-ghost px-3 text-xs" onClick={() => quickAdd(t.id)}>+ {t.name}</button>
           ))}
-          <button className="btn-primary px-3 py-1 text-xs" onClick={() => quickAdd(types[0]?.id)}>+ Nuevo</button>
+          <button className="btn-primary px-3 text-xs" onClick={() => quickAdd(types[0]?.id)}>+ Nuevo</button>
         </div>
       </div>
 
@@ -139,6 +141,15 @@ export function CalendarView({ types, outlookConnected }: { types: ActivityType[
           longPressDelay={300}
           events={fetchEvents}
           select={(s) => setDraft(newDraft(s.start, s.end, s.allDay))}
+          eventContent={(arg) => (
+            <div className="flex min-w-0 items-start gap-1 overflow-hidden px-1 py-0.5 leading-tight">
+              <ModuleIcon module={(arg.event.extendedProps as { module: ModuleKey | null }).module} size={12} className="mt-0.5 shrink-0" />
+              <div className="min-w-0">
+                {arg.timeText && <div className="text-xs opacity-90">{arg.timeText}</div>}
+                <div className="truncate text-xs font-semibold">{arg.event.title}</div>
+              </div>
+            </div>
+          )}
           eventClick={(c) => {
             const raw = (c.event.extendedProps as { raw: CalendarEvent }).raw;
             setDraft({ ...raw });

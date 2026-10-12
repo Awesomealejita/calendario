@@ -2,6 +2,8 @@
 import { useState, useTransition } from "react";
 import type { ActivityType, CalendarEvent } from "@/lib/types";
 import { deleteEvent, saveEvent, setEventStatus } from "@/app/(app)/calendar/actions";
+import { Check, X } from "lucide-react";
+import { ModuleIcon } from "@/components/icons";
 
 export interface DraftEvent {
   id?: string;
@@ -80,7 +82,7 @@ export function EventDialog({
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold">{form.id ? "Editar" : "Nuevo"} {type ? type.name.toLowerCase() : "evento"}</h2>
-          <button type="button" onClick={onClose} className="text-muted" aria-label="Cerrar">✕</button>
+          <button type="button" onClick={onClose} className="btn-ghost h-10 w-10 p-0" aria-label="Cerrar"><X size={18} aria-hidden /></button>
         </div>
 
         {form.source && form.source !== "local" && (
@@ -99,10 +101,12 @@ export function EventDialog({
               key={t.id}
               disabled={readOnly}
               onClick={() => set({ activity_type_id: t.id })}
-              className={`rounded-full border px-3 py-1 text-sm font-semibold ${form.activity_type_id === t.id ? "border-transparent text-night" : "border-border text-muted"}`}
-              style={form.activity_type_id === t.id ? { background: t.color } : undefined}
+              aria-pressed={form.activity_type_id === t.id}
+              className={`chip text-sm ${form.activity_type_id === t.id ? "text-text" : "border-border text-muted"}`}
+              style={form.activity_type_id === t.id ? { background: `color-mix(in srgb, ${t.color} 30%, var(--surface))`, borderColor: t.color } : undefined}
             >
-              {t.icon} {t.name}
+              <ModuleIcon module={t.module} size={14} />
+              {t.name}
             </button>
           ))}
         </div>
@@ -144,14 +148,14 @@ export function EventDialog({
           </label>
         )}
 
-        {error && <p className="mb-3 text-sm text-red">{error}</p>}
+        {error && <p className="mb-3 text-sm text-danger">{error}</p>}
 
         {form.id && (
           <div className="mb-3 flex flex-wrap gap-2">
-            <button type="button" className="btn-ghost" disabled={pending} onClick={() => run(() => setEventStatus(form.id!, "done"))}>✓ Hecho</button>
-            <button type="button" className="btn-ghost" disabled={pending} onClick={() => run(() => setEventStatus(form.id!, "missed"))}>✗ No fui</button>
+            <button type="button" className="btn-ghost" disabled={pending} onClick={() => run(() => setEventStatus(form.id!, "done"))}><Check aria-hidden size={16} />Hecho</button>
+            <button type="button" className="btn-ghost" disabled={pending} onClick={() => run(() => setEventStatus(form.id!, "missed"))}><X aria-hidden size={16} />No fui</button>
             {form.source === "local" && (
-              <button type="button" className="btn-ghost text-red" disabled={pending} onClick={() => confirm("¿Borrar el evento?") && run(() => deleteEvent(form.id!))}>Borrar</button>
+              <button type="button" className="btn-ghost text-danger" disabled={pending} onClick={() => confirm("¿Borrar el evento?") && run(() => deleteEvent(form.id!))}>Borrar</button>
             )}
           </div>
         )}

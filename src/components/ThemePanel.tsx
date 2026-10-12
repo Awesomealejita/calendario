@@ -1,10 +1,12 @@
 "use client";
 import { useState } from "react";
+import { Monitor, Moon, Palette, Sun } from "lucide-react";
+import { CardTitle } from "@/components/icons";
 
 const OPTIONS = [
-  { value: "light", label: "☀️ Claro" },
-  { value: "dark", label: "🌙 Oscuro" },
-  { value: "auto", label: "💻 Como el sistema" },
+  { value: "light", label: "Claro", Icon: Sun },
+  { value: "dark", label: "Oscuro", Icon: Moon },
+  { value: "auto", label: "Como el sistema", Icon: Monitor },
 ] as const;
 
 /** Aplica el tema al instante y lo recuerda en una cookie (el servidor lo usa al renderizar). */
@@ -21,7 +23,7 @@ export function ThemePanel({ initial }: { initial: string }) {
   };
   return (
     <section className="card">
-      <h2 className="font-bold">🎨 Apariencia</h2>
+      <CardTitle icon={Palette}>Apariencia</CardTitle>
       <div className="mt-3 flex flex-wrap gap-2" role="radiogroup" aria-label="Tema">
         {OPTIONS.map((o) => (
           <button
@@ -31,6 +33,7 @@ export function ThemePanel({ initial }: { initial: string }) {
             onClick={() => choose(o.value)}
             className={theme === o.value ? "btn-primary" : "btn-ghost"}
           >
+            <o.Icon aria-hidden size={16} />
             {o.label}
           </button>
         ))}

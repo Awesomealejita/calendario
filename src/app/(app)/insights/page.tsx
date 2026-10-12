@@ -12,6 +12,8 @@ import { Suggestions } from "@/components/Suggestions";
 import { loadUserData } from "@/lib/data";
 import { requireUser } from "@/lib/supabase/server";
 import { formatDuration } from "@/lib/time";
+import { Calculator, Target } from "lucide-react";
+import { CardTitle, ModuleIcon } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -75,7 +77,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
       <div className="space-y-4">
         <StreaksCard gymStreak={gymStreak} clockStreak={clockStreak} weeks={weeks} goal={gymType?.weekly_goal_sessions ?? null} list={achievementList} />
         <section className="card">
-          <h2 className="mb-3 font-bold">🎯 Esta semana</h2>
+          <CardTitle icon={Target} className="mb-3">Esta semana</CardTitle>
           {report.weekly.length === 0 && <p className="text-sm text-muted">Define objetivos semanales en Ajustes.</p>}
           <ul className="space-y-3">
             {report.weekly.map((w) => {
@@ -88,7 +90,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
               return (
                 <li key={w.activityTypeId}>
                   <div className="mb-1 flex justify-between text-sm">
-                    <span className="font-semibold">{t?.icon} {w.name}</span>
+                    <span className="flex items-center gap-1.5 font-semibold"><ModuleIcon module={t?.module} />{w.name}</span>
                     <span className="tabular-nums text-muted">
                       {w.goalSessions ? `${w.sessions}/${w.goalSessions} sesiones · ` : ""}
                       {formatDuration(w.minutes)}
@@ -106,7 +108,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
 
         <section className="card">
           <div className="mb-1 flex items-center justify-between gap-2">
-            <h2 className="font-bold">🧮 Cuadre de horas</h2>
+            <CardTitle icon={Calculator}>Cuadre de horas</CardTitle>
             <nav className="flex items-center gap-1 text-xs" aria-label="Semana del cuadre">
               {offset > -8 && (
                 <Link className="btn-ghost px-2 py-1 text-xs" href={`/insights?semana=${offset - 1}`} aria-label="Semana anterior">←</Link>
@@ -141,13 +143,13 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
                     <td className="tabular-nums">{d.clocked ? formatDuration(d.clocked) : "—"}</td>
                     <td className="tabular-nums">{d.tracked ? formatDuration(d.tracked) : "—"}</td>
                     <td className="tabular-nums">{d.meetings ? formatDuration(d.meetings) : "—"}</td>
-                    <td className={`tabular-nums font-semibold ${d.expected && d.delta !== null ? (Math.abs(d.delta) <= 30 ? "" : d.delta > 0 ? "text-plum dark:text-peach" : "text-red") : "text-muted"}`}>
+                    <td className={`tabular-nums font-semibold ${d.expected && d.delta !== null ? (Math.abs(d.delta) <= 30 ? "" : d.delta > 0 ? "text-plum dark:text-peach" : "text-danger") : "text-muted"}`}>
                       {d.expected && d.delta !== null ? `${d.delta > 0 ? "+" : ""}${formatDuration(d.delta)}` : "—"}
                     </td>
                     <td>
                       <div className="flex flex-wrap gap-1 whitespace-normal">
                         {d.flags.map((f) => (
-                          <span key={f} className="rounded-md bg-red px-1.5 py-0.5 text-[10px] font-bold text-white">{FLAG_LABEL[f]}</span>
+                          <span key={f} className="rounded-md bg-danger-bg px-1.5 py-0.5 text-xs font-bold text-danger">{FLAG_LABEL[f]}</span>
                         ))}
                       </div>
                     </td>

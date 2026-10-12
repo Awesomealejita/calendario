@@ -93,14 +93,14 @@ export function QuickAdd({ types, onCreated, onEdit }: { types: ActivityType[]; 
             setText(e.target.value);
             setDraft(null);
           }}
-          placeholder="Escribe o dicta: «gym mañana a las 7»"
+          placeholder="Ej.: gym mañana a las 7"
           aria-label="Añadir evento escribiendo"
         />
         {canDictate && (
           <button
             type="button"
             onClick={dictate}
-            className={`btn-ghost h-11 w-11 shrink-0 p-0 ${listening ? "animate-pulse border-red text-red" : ""}`}
+            className={`btn-ghost h-11 w-11 shrink-0 p-0 ${listening ? "animate-pulse border-danger text-danger" : ""}`}
             aria-label={listening ? "Parar dictado" : "Dictar por voz"}
             aria-pressed={listening}
           >
@@ -114,7 +114,7 @@ export function QuickAdd({ types, onCreated, onEdit }: { types: ActivityType[]; 
           {pending ? "…" : "Añadir"}
         </button>
       </form>
-      {error && <p className="mt-2 text-sm text-red">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
       {draft && (
         <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-surface-2 p-3" role="status">
           <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: type?.color ?? "var(--plum)" }} aria-hidden />

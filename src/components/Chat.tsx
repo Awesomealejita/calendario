@@ -1,5 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
+import { MessageCircle } from "lucide-react";
+import { CardTitle } from "@/components/icons";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -25,9 +27,9 @@ export function Chat({ enabled }: { enabled: boolean }) {
         body: JSON.stringify({ messages: next.slice(-20) }),
       });
       const j = await r.json();
-      setMessages([...next, { role: "assistant", content: r.ok ? j.reply || "…" : `⚠️ ${j.error}` }]);
+      setMessages([...next, { role: "assistant", content: r.ok ? j.reply || "…" : j.error }]);
     } catch {
-      setMessages([...next, { role: "assistant", content: "⚠️ Sin conexión" }]);
+      setMessages([...next, { role: "assistant", content: "Sin conexión. Inténtalo de nuevo." }]);
     } finally {
       setBusy(false);
       setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
@@ -37,7 +39,7 @@ export function Chat({ enabled }: { enabled: boolean }) {
   if (!enabled) {
     return (
       <section className="card">
-        <h2 className="font-bold">💬 Pregúntale al asistente</h2>
+        <CardTitle icon={MessageCircle}>Pregúntale al asistente</CardTitle>
         <p className="mt-1 text-sm text-muted">Configura ANTHROPIC_API_KEY en el servidor para activar el chat.</p>
       </section>
     );
@@ -45,7 +47,7 @@ export function Chat({ enabled }: { enabled: boolean }) {
 
   return (
     <section className="card flex flex-col">
-      <h2 className="mb-2 font-bold">💬 Pregúntale al asistente</h2>
+      <CardTitle icon={MessageCircle} className="mb-2">Pregúntale al asistente</CardTitle>
       <div className="mb-3 max-h-80 min-h-24 space-y-2 overflow-y-auto">
         {messages.length === 0 && (
           <div className="flex flex-wrap gap-2">

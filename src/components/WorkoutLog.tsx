@@ -54,7 +54,7 @@ export function WorkoutLog({
         <h3 className="text-sm font-semibold">Entreno</h3>
         {sets.length > 0 && (
           <span className="text-xs text-muted tabular-nums">
-            {sets.length} series · {Math.round(volume).toLocaleString("es-ES")} kg de volumen
+            {sets.length} {sets.length === 1 ? "serie" : "series"} · {Math.round(volume).toLocaleString("es-ES")} kg de volumen
           </span>
         )}
       </div>
@@ -120,7 +120,7 @@ export function WorkoutLog({
           {pending ? "Guardando…" : "+ Añadir serie"}
         </button>
       </form>
-      {error && <p className="mt-2 text-sm text-red">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
 
       {finishedMinutes !== null && ios && (
         <a

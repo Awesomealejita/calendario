@@ -6,6 +6,8 @@ import { pauseAction, startAction, stopAction } from "@/app/(app)/timer/actions"
 import { useLocalFlag } from "@/components/hooks";
 import { WorkoutLog, type LastSet } from "@/components/WorkoutLog";
 import type { WorkoutSet } from "@/lib/types";
+import { Pause, Play, Square } from "lucide-react";
+import { ModuleIcon } from "@/components/icons";
 
 /** Parte de la hora del servidor para que el HTML hidratado coincida, y luego avanza cada segundo. */
 function useNow(initial: number, active: boolean) {
@@ -57,7 +59,7 @@ export function TimerBoard({
   return (
     <div className="space-y-4">
       {msg && (
-        <p role="status" className={`rounded-xl px-4 py-3 text-sm ${msg.tone === "err" ? "bg-red text-white" : "bg-peach text-night"}`}>{msg.text}</p>
+        <p role="status" className={`rounded-xl px-4 py-3 text-sm ${msg.tone === "err" ? "bg-danger-bg text-danger" : "bg-peach text-night"}`}>{msg.text}</p>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
         {types.map((t) => {
@@ -71,7 +73,7 @@ export function TimerBoard({
             <section key={t.id} className="card relative overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: t.color }} />
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold">{t.icon} {t.name}</h2>
+                <h2 className="flex items-center gap-2 text-lg font-bold"><ModuleIcon module={t.module} size={20} />{t.name}</h2>
                 <span className="text-xs text-muted">Hoy: {formatDuration(doneToday)}</span>
               </div>
               <p
@@ -96,15 +98,18 @@ export function TimerBoard({
               <div className="flex gap-2">
                 {!s ? (
                   <button className="btn-primary flex-1 py-3 text-base" disabled={pending} onClick={() => run(() => startAction(t.id, isWork && holded))}>
-                    ▶ Empezar
+                    <Play aria-hidden size={18} className="fill-current" />
+                    Empezar
                   </button>
                 ) : (
                   <>
                     <button className="btn-ghost flex-1 py-3 text-base" disabled={pending} onClick={() => run(() => pauseAction(s.id, isWork && holded))}>
-                      {paused ? "▶ Seguir" : "⏸ Pausa"}
+                      {paused ? <Play aria-hidden size={18} className="fill-current" /> : <Pause aria-hidden size={18} />}
+                      {paused ? "Seguir" : "Pausa"}
                     </button>
                     <button className="btn-primary flex-1 py-3 text-base" disabled={pending} onClick={() => run(() => stopAction(s.id, isWork && holded))}>
-                      ■ Terminar
+                      <Square aria-hidden size={16} className="fill-current" />
+                      Terminar
                     </button>
                   </>
                 )}
@@ -113,11 +118,12 @@ export function TimerBoard({
                 <WorkoutLog sessionId={workout.sessionId} sets={workout.sets} history={history} finishedMinutes={workout.finishedMinutes} />
               )}
               {isWork && (
-                <label className={`mt-3 flex items-center gap-2 text-sm ${holdedReady ? "" : "text-muted"}`}>
+                <label className={`mt-2 flex min-h-11 cursor-pointer items-center gap-3 text-sm ${holdedReady ? "" : "text-muted"}`}>
                   <input
                     type="checkbox"
                     checked={holded}
                     disabled={!holdedReady}
+                    className="h-5 w-5 accent-[var(--plum)]"
                     onChange={(e) => setHolded(e.target.checked)}
                   />
                   Fichar también en Holded {!holdedReady && "(configúralo en Ajustes)"}
@@ -139,7 +145,7 @@ export function TimerBoard({
               return (
                 <li key={s.id} className="flex items-center justify-between py-2">
                   <span>
-                    {t?.icon} {t?.name ?? "—"} {s.source === "holded" && <span className="ml-1 rounded bg-plum px-1.5 text-[10px] font-bold text-white">Holded</span>}
+                    <ModuleIcon module={t?.module} size={14} className="mr-1 inline" />{t?.name ?? "—"} {s.source === "holded" && <span className="ml-1 rounded bg-plum px-1.5 text-xs font-bold text-white">Holded</span>}
                   </span>
                   <span className="tabular-nums text-muted">
                     {new Date(s.started_at).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE })}–

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
+import { Logo } from "@/components/icons";
 import { requireUser } from "@/lib/supabase/server";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -9,7 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <header className="sticky top-0 z-30 border-b border-border bg-bg/90 pt-[env(safe-area-inset-top)] backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <Link href="/calendar" className="flex items-center gap-2 font-extrabold">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-peach via-coral to-plum text-night">✓</span>
+            <Logo />
             Calendario
           </Link>
           <Nav />
