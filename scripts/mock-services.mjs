@@ -106,7 +106,14 @@ function anthropicReply(body) {
   return { ...base, content: [{ type: "text", text: `[Respuesta simulada] Has preguntado: "${body.messages.at(-1).content}". Con una ANTHROPIC_API_KEY real responderá Claude usando tu calendario.` }] };
 }
 
-createServer(async (req, res) => {
+createServer((req, res) =>
+  handle(req, res).catch((e) => {
+    console.error("mock error:", e.message);
+    if (!res.headersSent) json(res, 500, { error: e.message });
+  }),
+).listen(PORT, () => log(`Simulador en http://localhost:${PORT}`));
+
+async function handle(req, res) {
   const url = new URL(req.url, `http://localhost:${PORT}`);
   const p = url.pathname;
   const body = req.method === "GET" ? "" : await readBody(req);
@@ -173,7 +180,14 @@ createServer(async (req, res) => {
   }
 
   // --- API de Claude ---
-  if (p === "/anthropic/v1/messages") return json(res, 200, anthropicReply(JSON.parse(body)));
+  if (p === "/anthropic/v1/messages") {
+    const parsed = JSON.parse(body);
+    // Alta rápida: el simulador no interpreta frases; devuelve error y la app usa su intérprete local.
+    if (JSON.stringify(parsed.system ?? "").includes("Conviertes frases")) {
+      return json(res, 400, { type: "error", error: { type: "invalid_request_error", message: "mock: sin intérprete" } });
+    }
+    return json(res, 200, anthropicReply(parsed));
+  }
 
   json(res, 404, { error: `mock: ruta no simulada ${req.method} ${p}` });
-}).listen(PORT, () => log(`Simulador en http://localhost:${PORT}`));
+}

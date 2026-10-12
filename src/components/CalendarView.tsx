@@ -11,6 +11,7 @@ import type { EventResizeDoneArg } from "@fullcalendar/interaction";
 import type { ActivityType, CalendarEvent } from "@/lib/types";
 import { EventDialog, type DraftEvent } from "@/components/EventDialog";
 import { useMediaQuery } from "@/components/hooks";
+import { QuickAdd } from "@/components/QuickAdd";
 import { moveEvent } from "@/app/(app)/calendar/actions";
 
 export function CalendarView({ types, outlookConnected }: { types: ActivityType[]; outlookConnected: boolean }) {
@@ -27,6 +28,12 @@ export function CalendarView({ types, outlookConnected }: { types: ActivityType[
   }, [toast]);
 
   const refetch = () => ref.current?.getApi().refetchEvents();
+  // Otros componentes (avisos) piden refrescar el calendario tras mover un evento.
+  useEffect(() => {
+    const h = () => ref.current?.getApi().refetchEvents();
+    window.addEventListener("calendar:refresh", h);
+    return () => window.removeEventListener("calendar:refresh", h);
+  }, []);
 
   const fetchEvents = useCallback(
     async (info: { startStr: string; endStr: string }, ok: (e: EventInput[]) => void, fail: (e: Error) => void) => {
@@ -68,6 +75,14 @@ export function CalendarView({ types, outlookConnected }: { types: ActivityType[
 
   return (
     <div className="space-y-3">
+      <QuickAdd
+        types={types}
+        onEdit={(d) => setDraft(d)}
+        onCreated={(msg) => {
+          if (msg) setToast(msg);
+          refetch();
+        }}
+      />
       <div className="flex flex-wrap items-center gap-2">
         {types.map((t) => {
           const off = hidden.has(t.id);

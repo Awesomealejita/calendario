@@ -2,6 +2,7 @@ import { IntegrationsPanel, PushPanel, TypesPanel } from "@/components/SettingsP
 import { SignOut } from "@/components/SignOut";
 import { PasswordPanel } from "@/components/PasswordPanel";
 import { ThemePanel } from "@/components/ThemePanel";
+import { AppleHealthPanel } from "@/components/AppleHealthPanel";
 import { cookies } from "next/headers";
 import { requireUser } from "@/lib/supabase/server";
 import type { ActivityType } from "@/lib/types";
@@ -22,6 +23,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <ThemePanel initial={(await cookies()).get("theme")?.value ?? "light"} />
         <TypesPanel types={(types ?? []) as ActivityType[]} />
         <PushPanel vapidKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY} />
+        <AppleHealthPanel />
         <PasswordPanel />
         <section className="card flex items-center justify-between">
           <p className="text-sm text-muted">{user.email}</p>

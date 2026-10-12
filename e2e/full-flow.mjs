@@ -148,6 +148,39 @@ await step("Crear evento de trabajo y enviarlo también a Outlook", async () => 
   await page.waitForSelector(".fc-event >> text=Bloque foco");
 });
 
+const restGet = async (q) =>
+  (await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/${q}`, { headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` } })).json();
+const madrid = (iso) => new Date(iso).toLocaleString("es-ES", { timeZone: "Europe/Madrid", weekday: "short", hour: "2-digit", minute: "2-digit" });
+
+await step("Alta rápida escribiendo: «dentista el jueves a las 17:30»", async () => {
+  await page.goto(`${APP}/calendar`);
+  await page.fill('input[aria-label="Añadir evento escribiendo"]', "dentista el jueves a las 17:30");
+  await page.click('button:has-text("Añadir")');
+  await page.waitForSelector("[role=status] >> text=Dentista");
+  await page.screenshot({ path: `${OUT}/08-alta-rapida.png` });
+  await page.click('button:has-text("Confirmar")');
+  await page.waitForSelector("text=«Dentista» añadido");
+  const rows = (await restGet("events?title=eq.Dentista&select=starts_at,user_id")).filter((r) => r.user_id === createdUserIds[0]);
+  expect(rows.length === 1 && madrid(rows[0].starts_at) === "jue, 17:30", `dentista: ${JSON.stringify(rows.map((r) => madrid(r.starts_at)))}`);
+});
+
+await step("Aviso inteligente: reunión hasta las 18:10 y gym a las 19 → mover", async () => {
+  for (const text of ["reunión comité mañana de 17 a 18:10", "gym mañana a las 19"]) {
+    await page.fill('input[aria-label="Añadir evento escribiendo"]', text);
+    await page.click('button:has-text("Añadir")');
+    await page.waitForSelector('button:has-text("Confirmar")');
+    await page.click('button:has-text("Confirmar")');
+    await page.waitForSelector('button:has-text("Confirmar")', { state: "detached" });
+  }
+  await page.reload();
+  await page.waitForSelector("text=Sales de «Reunión comité» a las 18:10, ¿mantienes el gym a las 19:00?");
+  await page.screenshot({ path: `${OUT}/09-aviso.png` });
+  await page.click('button:has-text("Mover a las 19:15")');
+  await page.waitForSelector("text=Sales de «Reunión comité»", { state: "detached" });
+  const gyms = (await restGet("events?title=eq.Gym&select=starts_at,user_id")).filter((r) => r.user_id === createdUserIds[0]);
+  expect(gyms.some((g) => madrid(g.starts_at).endsWith("19:15")), `gym: ${gyms.map((g) => madrid(g.starts_at))}`);
+});
+
 await step("Completar una tarea de To Do (se propaga a Outlook)", async () => {
   await page.click('input[aria-label="Completar Revisar contrato proveedor"]');
   await page.waitForSelector("text=Revisar contrato proveedor", { state: "detached" });
@@ -162,6 +195,12 @@ await step("Cronómetro de gym: empezar, pausar, seguir y terminar", async () =>
   await gym.getByRole("button", { name: /Pausa/ }).click();
   await gym.getByRole("button", { name: /Seguir/ }).click();
   await gym.getByRole("button", { name: /Pausa/ }).waitFor();
+  await gym.locator('input[aria-label="Ejercicio"]').fill("Sentadilla");
+  await gym.locator('input[aria-label="Repeticiones"]').fill("8");
+  await gym.locator('input[aria-label="Peso en kilos"]').fill("60");
+  await gym.getByRole("button", { name: "+ Añadir serie" }).click();
+  await gym.locator("text=8 × 60 kg").waitFor();
+  await gym.locator("text=480 kg de volumen").waitFor();
   await page.screenshot({ path: `${OUT}/04-cronometro.png` });
   await gym.getByRole("button", { name: /Terminar/ }).click();
   await gym.getByRole("button", { name: /Empezar/ }).waitFor();
@@ -187,6 +226,8 @@ await step("Asistente: analizar, ver sugerencias y cuadre de horas", async () =>
   await page.click("text=Analizar ahora");
   await page.waitForSelector(CLOUD ? "text=Recupera la sesión" : "text=[Simulado] Recupera el gym");
   await page.waitForSelector("text=Cuadre de horas");
+  await page.waitForSelector("text=Rachas y logros");
+  await page.waitForSelector("text=Primer paso (conseguido)", { state: "attached" });
   if (CLOUD) return void (await page.screenshot({ path: `${OUT}/05-asistente.png`, fullPage: true }));
   // Los avisos de días pasados pueden estar en la semana anterior (p. ej. si hoy es lunes).
   if (!(await page.locator("td >> text=Fichaje abierto").count())) await page.click('a[aria-label="Semana anterior"]');

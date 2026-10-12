@@ -72,3 +72,13 @@ export interface Suggestion {
   status: "open" | "accepted" | "dismissed";
   created_at: string;
 }
+
+export interface WorkoutSet {
+  id: string;
+  user_id: string;
+  session_id: string;
+  exercise: string;
+  reps: number | null;
+  weight_kg: number | null;
+  created_at: string;
+}

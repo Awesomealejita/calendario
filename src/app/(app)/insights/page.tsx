@@ -2,13 +2,16 @@ import Link from "next/link";
 import { addDays } from "date-fns";
 import { analyzeAdherence, weekBounds } from "@/ai/adherence";
 import { reconcileWork } from "@/lib/reconcile";
+import { achievements, bestStreak, perfectClockStreak, weekStreak, weeklyHistory } from "@/lib/streaks";
+import { StreaksCard } from "@/components/StreaksCard";
+import { dayKey, countedMinutes } from "@/lib/time";
+import type { ActivityType, Suggestion, TimeSession } from "@/lib/types";
 import { aiEnabled } from "@/ai/client";
 import { Chat } from "@/components/Chat";
 import { Suggestions } from "@/components/Suggestions";
 import { loadUserData } from "@/lib/data";
 import { requireUser } from "@/lib/supabase/server";
 import { formatDuration } from "@/lib/time";
-import type { Suggestion } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +35,33 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
     supabase.from("suggestions").select("*").eq("status", "open").order("created_at", { ascending: false }),
   ]);
   const report = analyzeAdherence({ ...data, now });
+  // Rachas: 12 semanas de gym y 4 de fichajes.
+  const gymType = data.types.find((t) => t.module === "gym") as ActivityType | undefined;
+  const [{ data: gymSessions }, { data: clockSessions }, { count: totalSets }, { data: allGym }] = await Promise.all([
+    supabase.from("time_sessions").select("*").eq("source", "timer").gte("started_at", addDays(now, -7 * 12).toISOString()),
+    supabase.from("time_sessions").select("*").gte("started_at", addDays(now, -35).toISOString()),
+    supabase.from("workout_sets").select("id", { count: "exact", head: true }),
+    gymType
+      ? supabase.from("time_sessions").select("started_at, ended_at, pauses").eq("activity_type_id", gymType.id).eq("source", "timer")
+      : Promise.resolve({ data: [] as Pick<TimeSession, "started_at" | "ended_at" | "pauses">[] }),
+  ]);
+  const weeks = gymType ? weeklyHistory(gymType, (gymSessions ?? []) as TimeSession[], now, 12) : [];
+  const last28 = Array.from({ length: 28 }, (_, i) => dayKey(addDays(now, -i)));
+  const clockStreak = perfectClockStreak(
+    reconcileWork({ days: last28, types: data.types, events: data.events, sessions: (clockSessions ?? []) as TimeSession[], now }),
+    now,
+  );
+  const gymStreak = weekStreak(weeks);
+  const gymList = (allGym ?? []) as Pick<TimeSession, "started_at" | "ended_at" | "pauses">[];
+  const achievementList = achievements({
+    totalGymSessions: gymList.length,
+    totalGymMinutes: gymList.reduce((a, x) => a + countedMinutes(x, now), 0),
+    gymStreak,
+    bestGymStreak: bestStreak(weeks),
+    clockStreak,
+    totalSets: totalSets ?? 0,
+  });
+
   const balance = offset === 0 ? report.workBalance : reconcileWork({ days: week.days, types: data.types, events: data.events, sessions: data.sessions, now });
   const typeById = new Map(data.types.map((t) => [t.id, t]));
 
@@ -43,6 +73,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
       </div>
 
       <div className="space-y-4">
+        <StreaksCard gymStreak={gymStreak} clockStreak={clockStreak} weeks={weeks} goal={gymType?.weekly_goal_sessions ?? null} list={achievementList} />
         <section className="card">
           <h2 className="mb-3 font-bold">🎯 Esta semana</h2>
           {report.weekly.length === 0 && <p className="text-sm text-muted">Define objetivos semanales en Ajustes.</p>}

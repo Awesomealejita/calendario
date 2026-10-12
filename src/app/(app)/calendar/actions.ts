@@ -3,7 +3,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/supabase/server";
 import { completeTodoTask, pushEventToOutlook, updateOutlookEvent } from "@/integrations/outlook/sync";
-import type { CalendarEvent, Task } from "@/lib/types";
+import type { ActivityType, CalendarEvent, Task } from "@/lib/types";
+import { draftFromText } from "@/ai/quickadd";
 
 const EventInput = z.object({
   id: z.string().uuid().optional(),
@@ -107,4 +108,30 @@ export async function toggleTask(id: string, done: boolean): Promise<ActionResul
   }
   revalidatePath("/calendar");
   return { ok: true };
+}
+
+/** Interpreta una frase ("gym mañana a las 7") y devuelve un borrador para confirmar. */
+export async function previewQuickAdd(text: string) {
+  const { supabase } = await requireUser();
+  const clean = text.trim().slice(0, 300);
+  if (!clean) return { ok: false as const, error: "Escribe o dicta algo" };
+  const draft = await draftFromText(clean);
+  if (!draft) return { ok: false as const, error: "No he entendido la frase" };
+  const { data: types } = await supabase.from("activity_types").select("*");
+  const list = (types ?? []) as ActivityType[];
+  const type = list.find((t) => t.module === draft.module) ?? list.find((t) => t.module === "appointments") ?? list[0];
+  return { ok: true as const, draft: { ...draft, activity_type_id: type?.id ?? null } };
+}
+
+/** "Mantener": no volver a avisar de este evento. */
+export async function dismissAlert(eventId: string): Promise<ActionResult> {
+  const { supabase } = await requireUser();
+  const { data } = await supabase.from("events").select("metadata").eq("id", eventId).single();
+  const { error } = await supabase
+    .from("events")
+    .update({ metadata: { ...((data?.metadata as Record<string, unknown>) ?? {}), alertDismissed: true } })
+    .eq("id", eventId);
+  revalidatePath("/calendar");
+  revalidatePath("/timer");
+  return error ? { ok: false, error: error.message } : { ok: true };
 }

@@ -30,6 +30,7 @@
   --accent-text: #ffffff;
   --focus: #7c3f82;
   --today: rgba(255, 207, 156, 0.28);
+  --chart-bar: #e8543f;
 }
 
 @media (prefers-color-scheme: dark) {

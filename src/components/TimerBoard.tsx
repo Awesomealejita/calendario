@@ -4,6 +4,8 @@ import type { ActivityType, CalendarEvent, TimeSession } from "@/lib/types";
 import { TIMEZONE, formatClock, formatDuration, isPaused, pausedMs, sessionMinutes } from "@/lib/time";
 import { pauseAction, startAction, stopAction } from "@/app/(app)/timer/actions";
 import { useLocalFlag } from "@/components/hooks";
+import { WorkoutLog, type LastSet } from "@/components/WorkoutLog";
+import type { WorkoutSet } from "@/lib/types";
 
 /** Parte de la hora del servidor para que el HTML hidratado coincida, y luego avanza cada segundo. */
 function useNow(initial: number, active: boolean) {
@@ -25,6 +27,8 @@ export function TimerBoard({
   next,
   holdedReady,
   serverNow,
+  workout,
+  history,
 }: {
   types: ActivityType[];
   open: TimeSession[];
@@ -32,6 +36,9 @@ export function TimerBoard({
   next: CalendarEvent[];
   holdedReady: boolean;
   serverNow: number;
+  /** Sesión de gym abierta o la última de hoy, con sus series. */
+  workout: { sessionId: string; sets: WorkoutSet[]; finishedMinutes: number | null } | null;
+  history: LastSet[];
 }) {
   const now = useNow(serverNow, open.length > 0);
   const [holdedPref, setHolded] = useLocalFlag(HOLDED_PREF, true);
@@ -102,6 +109,9 @@ export function TimerBoard({
                   </>
                 )}
               </div>
+              {t.module === "gym" && workout && (
+                <WorkoutLog sessionId={workout.sessionId} sets={workout.sets} history={history} finishedMinutes={workout.finishedMinutes} />
+              )}
               {isWork && (
                 <label className={`mt-3 flex items-center gap-2 text-sm ${holdedReady ? "" : "text-muted"}`}>
                   <input
